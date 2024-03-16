@@ -1,27 +1,37 @@
-def cardinality(relations, selectivities):
-    if len(relations) == 1:
-        return relations[0]["cardinality"]
-    result = 1
-    i = 0
-    j = 1
-    while len(relations) > i + 1:
-        result *= selectivities[i][j] * relations[i]["cardinality"]
-        i += 1
-        j += 1
+def flatten(lst):
+    for i in lst:
+        if isinstance(i, list):
+            yield from flatten(i)
+        else:
+            yield i
+
+def join_tree_cardinality(join_tree, relations, selectivities):
+    if type(join_tree) == int:
+        return relations[join_tree]["cardinality"]
+    
+    selectivity = 1
+    if type(join_tree[0]) == list:
+        flattened_relations_left = list(flatten(join_tree[0]))
+    else:
+        flattened_relations_left = [join_tree[0]]
+        
+    if type(join_tree[1]) == list:
+        flattened_relations_right = list(flatten(join_tree[1]))
+    else:
+        flattened_relations_right = [join_tree[1]]
+        
+    for rel_left in flattened_relations_left:
+        for rel_right in flattened_relations_right:
+            rel_left, rel_right = sorted([rel_left, rel_right])
+            if (rel_left, rel_right) in selectivities:
+                selectivity *= selectivities[(rel_left, rel_right)]["selectivity"]
+    
+    result = selectivity * join_tree_cardinality(join_tree[0], relations, selectivities)*join_tree_cardinality(join_tree[1], relations, selectivities)
     return result
 
 
-def standard_cost_left_deep(relations, selectivities):
-    if len(relations) == 1:
-        return cardinality(relations, selectivities)
-    current_cardinality = cardinality(relations, selectivities)
-    left_branch = [relations[0]]
-    right_branch = relations[1:]
-    return current_cardinality + standard_cost_left_deep(left_branch, selectivities) + standard_cost_left_deep(right_branch, selectivities)
-
-
-def weight_function(relation, relations = None, selectivities = None):
-    if relations == None and selectivities == None:
-        return relation["cardinality"]
-    else:
-        return standard_cost_left_deep([relation] + relations, selectivities)
+def basic_cost(join_tree, relations, selectivities):
+    if type(join_tree) == int:
+        return 0
+    current_cardinality = join_tree_cardinality(join_tree, relations, selectivities)
+    return current_cardinality + basic_cost(join_tree[0], relations, selectivities) + basic_cost(join_tree[1], relations, selectivities)

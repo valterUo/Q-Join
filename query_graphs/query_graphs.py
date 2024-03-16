@@ -1,4 +1,6 @@
 import networkx as nx
+import numpy as np
+np.random.seed(0)
 
 class QueryGraphs:
     
@@ -8,7 +10,7 @@ class QueryGraphs:
     def get_graph_1(self):
         query_graph = nx.Graph()
         
-        query_graph.add_node(0, label ='R1', cardinality = 10000)
+        query_graph.add_node(0, label ='R1', cardinality = 10)
         query_graph.add_node(1, label='R2', cardinality = 100)
         query_graph.add_node(2, label='R3', cardinality = 1000)
         
@@ -52,7 +54,7 @@ class QueryGraphs:
         return query_graph
     
     def get_graph_4(self):
-        nodes = 4
+        nodes = 10
         query_graph = nx.complete_graph(nodes)
         
         for i in range(nodes):
@@ -61,6 +63,46 @@ class QueryGraphs:
         
         for l, (i, j) in enumerate(query_graph.edges):
             query_graph.edges[i, j]['label'] = l
-            query_graph.edges[i, j]['selectivity'] = 0.1*(l+1)
+            query_graph.edges[i, j]['selectivity'] = 0.001*(l+1)
+            
+        return query_graph
+    
+    def get_graph_5(self):
+        query_graph = nx.Graph()
+        
+        query_graph.add_node(0, label ='R1', cardinality = 1000)
+        query_graph.add_node(1, label='R2', cardinality = 2)
+        query_graph.add_node(2, label='R3', cardinality = 2)
+        
+        query_graph.add_edge(0, 1, label='0', selectivity = 0.1)
+        query_graph.add_edge(0, 2, label='1', selectivity = 0.1)
+        
+        return query_graph
+    
+    def get_graph_6(self):
+        query_graph = nx.Graph()
+        
+        query_graph.add_node(0, label ='R1', cardinality = 10)
+        query_graph.add_node(1, label='R2', cardinality = 20)
+        query_graph.add_node(2, label='R3', cardinality = 20)
+        query_graph.add_node(3, label='R3', cardinality = 10)
+        
+        query_graph.add_edge(0, 1, label='0', selectivity = 0.01)
+        query_graph.add_edge(1, 2, label='1', selectivity = 0.5)
+        query_graph.add_edge(2, 3, label='2', selectivity = 0.01)
+        
+        return query_graph
+    
+    def get_graph_7(self, n_nodes=10):
+        nodes = n_nodes
+        query_graph = nx.complete_graph(nodes)
+        
+        for i in range(nodes):
+            query_graph.nodes[i]['label'] = 'R' + str(i)
+            query_graph.nodes[i]['cardinality'] = np.random.randint(10, 1000)
+        
+        for l, (i, j) in enumerate(query_graph.edges):
+            query_graph.edges[i, j]['label'] = l
+            query_graph.edges[i, j]['selectivity'] = np.random.uniform(0, 1)
             
         return query_graph
