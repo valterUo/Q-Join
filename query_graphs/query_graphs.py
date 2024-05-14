@@ -1,4 +1,5 @@
 import networkx as nx
+from networkx.generators.trees import random_tree
 import numpy as np
 np.random.seed(0)
 
@@ -94,10 +95,22 @@ class QueryGraphs:
         return query_graph
     
     def get_graph_7(self, n_nodes=10):
-        nodes = n_nodes
-        query_graph = nx.complete_graph(nodes)
+        query_graph = nx.complete_graph(n_nodes)
         
-        for i in range(nodes):
+        for i in range(n_nodes):
+            query_graph.nodes[i]['label'] = 'R' + str(i)
+            query_graph.nodes[i]['cardinality'] = np.random.randint(10, 1000)
+        
+        for l, (i, j) in enumerate(query_graph.edges):
+            query_graph.edges[i, j]['label'] = l
+            query_graph.edges[i, j]['selectivity'] = np.random.uniform(0, 1)
+            
+        return query_graph
+    
+    def get_graph_8(self, n_nodes = 10):
+        query_graph = random_tree(n_nodes, seed=0)
+        
+        for i in range(n_nodes):
             query_graph.nodes[i]['label'] = 'R' + str(i)
             query_graph.nodes[i]['cardinality'] = np.random.randint(10, 1000)
         
