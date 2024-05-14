@@ -109,10 +109,11 @@ class QueryGraphs:
     
     def get_graph_8(self, n_nodes = 10):
         query_graph = random_tree(n_nodes, seed=0)
+        np.random.seed(0)
         
         for i in range(n_nodes):
             query_graph.nodes[i]['label'] = 'R' + str(i)
-            query_graph.nodes[i]['cardinality'] = np.random.randint(10, 1000)
+            query_graph.nodes[i]['cardinality'] = np.random.randint(1, 10)
         
         for l, (i, j) in enumerate(query_graph.edges):
             query_graph.edges[i, j]['label'] = l

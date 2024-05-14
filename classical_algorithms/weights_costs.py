@@ -6,7 +6,10 @@ def flatten(lst):
             yield i
 
 def join_tree_cardinality(join_tree, relations, selectivities):
+    #print(join_tree)
+    #print("computing")
     if type(join_tree) == int:
+        #print(relations[join_tree]["cardinality"])
         return relations[join_tree]["cardinality"]
     
     selectivity = 1
@@ -19,14 +22,19 @@ def join_tree_cardinality(join_tree, relations, selectivities):
         flattened_relations_right = list(flatten(join_tree[1]))
     else:
         flattened_relations_right = [join_tree[1]]
-        
+    
+    #print(flattened_relations_left, flattened_relations_right)    
+    
     for rel_left in flattened_relations_left:
         for rel_right in flattened_relations_right:
-            rel_left, rel_right = sorted([rel_left, rel_right])
-            if (rel_left, rel_right) in selectivities:
-                selectivity *= selectivities[(rel_left, rel_right)]["selectivity"]
+            x, y = sorted([rel_left, rel_right])
+            if (x, y) in selectivities:
+                #print(x, y, selectivities[(x, y)]["selectivity"])
+                #print(rel_left, rel_right, selectivities[(rel_left, rel_right)]["selectivity"])
+                selectivity *= selectivities[(x, y)]["selectivity"]
     
     result = selectivity * join_tree_cardinality(join_tree[0], relations, selectivities)*join_tree_cardinality(join_tree[1], relations, selectivities)
+    #print(result)
     return result
 
 
