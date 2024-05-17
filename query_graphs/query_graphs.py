@@ -54,19 +54,6 @@ class QueryGraphs:
         
         return query_graph
     
-    def get_graph_4(self):
-        nodes = 10
-        query_graph = nx.complete_graph(nodes)
-        
-        for i in range(nodes):
-            query_graph.nodes[i]['label'] = 'R' + str(i)
-            query_graph.nodes[i]['cardinality'] = 2 * (i+1)
-        
-        for l, (i, j) in enumerate(query_graph.edges):
-            query_graph.edges[i, j]['label'] = l
-            query_graph.edges[i, j]['selectivity'] = 0.001*(l+1)
-            
-        return query_graph
     
     def get_graph_5(self):
         query_graph = nx.Graph()
@@ -94,12 +81,14 @@ class QueryGraphs:
         
         return query_graph
     
-    def get_graph_7(self, n_nodes=10):
-        query_graph = nx.complete_graph(n_nodes)
+    
+    def get_tree_graph(self, n_nodes = 10):
+        query_graph = random_tree(n_nodes, seed=0)
+        np.random.seed(0)
         
         for i in range(n_nodes):
             query_graph.nodes[i]['label'] = 'R' + str(i)
-            query_graph.nodes[i]['cardinality'] = np.random.randint(10, 1000)
+            query_graph.nodes[i]['cardinality'] = np.random.randint(1, 10)
         
         for l, (i, j) in enumerate(query_graph.edges):
             query_graph.edges[i, j]['label'] = l
@@ -107,13 +96,70 @@ class QueryGraphs:
             
         return query_graph
     
-    def get_graph_8(self, n_nodes = 10):
-        query_graph = random_tree(n_nodes, seed=0)
+    
+    def get_path_graph(self, n_nodes=10):
         np.random.seed(0)
+        query_graph = nx.path_graph(n_nodes)
         
         for i in range(n_nodes):
-            query_graph.nodes[i]['label'] = 'R' + str(i)
-            query_graph.nodes[i]['cardinality'] = np.random.randint(1, 10)
+            query_graph.nodes[i]['cardinality'] = np.random.randint(1, 30)
+        
+        for l, (i, j) in enumerate(query_graph.edges):
+            query_graph.edges[i, j]['label'] = l
+            query_graph.edges[i, j]['selectivity'] = np.random.uniform(0, 1)
+            
+        return query_graph
+    
+    
+    def get_complete_graph(self, n_nodes=10):
+        np.random.seed(0)
+        query_graph = nx.complete_graph(n_nodes)
+        
+        for i in range(n_nodes):
+            query_graph.nodes[i]['cardinality'] = np.random.randint(1, 30)
+        
+        for l, (i, j) in enumerate(query_graph.edges):
+            query_graph.edges[i, j]['label'] = l
+            query_graph.edges[i, j]['selectivity'] = np.random.uniform(0, 1)
+            
+        return query_graph
+    
+    
+    def get_cycles_graph(self, n_nodes=10):
+        np.random.seed(0)
+        query_graph = nx.cycle_graph(n_nodes)
+        
+        for i in range(n_nodes):
+            query_graph.nodes[i]['cardinality'] = np.random.randint(1, 30)
+        
+        for l, (i, j) in enumerate(query_graph.edges):
+            query_graph.edges[i, j]['label'] = l
+            query_graph.edges[i, j]['selectivity'] = np.random.uniform(0, 1)
+            
+        return query_graph
+    
+    
+    def get_star_graph(self, n_nodes=10):
+        np.random.seed(0)
+        query_graph = nx.star_graph(n_nodes - 1)
+        
+        for i in range(n_nodes):
+            query_graph.nodes[i]['cardinality'] = np.random.randint(1, 30)
+        
+        for l, (i, j) in enumerate(query_graph.edges):
+            query_graph.edges[i, j]['label'] = l
+            query_graph.edges[i, j]['selectivity'] = np.random.uniform(0, 1)
+            
+        return query_graph
+    
+    def get_random_graph(self, n_nodes=10):
+        np.random.seed(0)
+        query_graph = nx.gnp_random_graph(n_nodes, 0.3, directed=False)
+        
+        print(nx.is_connected(query_graph))
+        
+        for i in range(n_nodes):
+            query_graph.nodes[i]['cardinality'] = np.random.randint(1, 30)
         
         for l, (i, j) in enumerate(query_graph.edges):
             query_graph.edges[i, j]['label'] = l
