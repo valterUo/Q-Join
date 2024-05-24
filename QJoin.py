@@ -1,4 +1,6 @@
+import copy
 from itertools import combinations
+import math
 import time
 import cplex
 import dimod
@@ -12,16 +14,17 @@ from dwave.samplers import TabuSampler, SteepestDescentSolver, SimulatedAnnealin
 
 from classical_algorithms.dynamic_programming import dynamic_programming
 from classical_algorithms.weights_costs import basic_cost
-from variable import Variable
+from qaoa.qaoa import QuantumApproximateOptimizationAlgorithm
+from utils import combinations_with_variable, get_connected_subgraphs_with_dfs, table_number_constraint, Variable
 
 class QJoin:
     
-    def __init__(self, query_graph, scaler=1):
+    def __init__(self, query_graph, scaler=1, hubo_to_bqm_strength=5, approximation = False):
         self.query_graph = query_graph
         self.scaler = scaler
         # For left-deep plan the max number of levels in the same as number of nodes - 1
         # For bushy plan the max number of levels is less but it's always the following value
-        self.max_number_of_levels = len(query_graph.edges) - len(nx.cycle_basis(query_graph))
+        self.max_number_of_levels = len(query_graph.nodes) - 1 #len(nx.cycle_basis(query_graph))
         
         self.levels = range(self.max_number_of_levels)
 
@@ -43,23 +46,42 @@ class QJoin:
         self.variables_by_joins = {}
         self.validity_constraints = {}
         self.samplesets = {}
+        self.lp_file = "lp_files//" + str(query_graph) + "_qubo.lp"
+        self.name = str(query_graph)
         
-        self.construct_cost_function()
-        self.group_variables()
-        self.every_level_one_join()
-        self.construct_validity_constraints_1()
+        if approximation:
+            self.construct_estimate_cost_function()
+            self.group_variables()
+            # Hard constraints
+            self.every_level_has_one_join()
+            self.hubo_combinations()
+            
+            # Hard constraints
+            #self.every_level_has_one_join()
+            #self.construct_validity_constraints_2()
+            #self.construct_validity_constraints_3()
+            #self.construct_validity_constraints_4()
+            #print("Hard constraints constructed")
+        else:
+            start = time.time()
+            self.construct_presice_cost_function()
+            end = time.time()
+            print("Time for constructing precise cost function: ", end - start)
+            self.group_variables()
+            # Hard constraints
+            self.every_level_has_one_join()
+            self.hubo_combinations()
+            
         self.construct_full_hubo()
+        self.construct_BQM(strength=hubo_to_bqm_strength)
+        print("Number of terms in QUBO: ", len(self.bqm.linear) + len(self.bqm.quadratic))
+            
     
     
-    def draw_query_graph(self):
-        # Define node colors and sizes
+    def draw_query_graph(self, name="query_graph.png"):
         node_color = 'sandybrown'
         node_size = 600
-
-        # Define edge colors
         edge_color = 'gray'
-
-        # Set the background color of the plot
         plt.figure(figsize=(8, 6))
         plt.gca().set_facecolor('whitesmoke')
 
@@ -76,32 +98,7 @@ class QJoin:
                 alpha=1.0          # Set transparency
             )
 
-        # Show the plot
-        plt.show()
-        
-        
-    def get_connected_subgraphs_dfs(self, graph, node, n):
-        connected_subgraphs = set()
-        
-        # Function to perform DFS to find connected subgraphs of size n
-        def dfs(start_node, path):
-            
-            if len(path) == n + 1:
-                connected_subgraphs.add(tuple(path))
-                return
-            
-            for r in range(1, n - len(path) + 2):
-                for neighbors_combination in combinations(graph.neighbors(start_node), r):
-                    for neighbor in neighbors_combination:
-                        if neighbor not in path:
-                            dfs(neighbor, path.union(set(neighbors_combination)))
-        
-        for r in range(1, n + 1):
-            for neighbors_combination in combinations(graph.neighbors(node), r):
-                for neighbor in neighbors_combination:
-                    dfs(neighbor, set(list(neighbors_combination) + [node]))
-        
-        return connected_subgraphs
+        plt.savefig("results//" + name)
     
     
     def safe_append(self, dictionary, key, value, mode="list"):
@@ -136,117 +133,136 @@ class QJoin:
                 self.safe_append(self.variables_by_tables, table, var)
     
     
-    def construct_cost_function(self):
+    def construct_presice_cost_function(self):
         for level in self.levels:
+            
+            joined_rels = []
+            if level > 0:
+                for var in self.variables:
+                    if self.variables[var][-1].get_level() == level - 1:
+                        joined_rels.append(var)
+                        
             for edge in self.query_graph.edges(data=True):
+                rel1, rel2 = edge[0], edge[1]
                 
                 if level == 0:
-                    subgraph = frozenset([edge[0], edge[1]])
-                    self.variables[subgraph] = [Variable(self.relations, self.selectivities, subgraph, subgraph, edge[0], edge[1], level, [])]
+                    subgraph = frozenset([rel1, rel2])
+                    self.variables[subgraph] = [Variable(self.relations, self.selectivities, subgraph, rel1, rel2, level, [])]
                 else:
-                    join1 = edge[0]
-                    join2 = edge[1]
-                    
-                    query_graph_copy = self.query_graph.copy()
-                    edge_to_remove = (join1, join2)
-                    query_graph_copy.remove_edge(*edge_to_remove)
-                    
-                    connected_subgraphs = self.get_connected_subgraphs_dfs(query_graph_copy, join1, level)
-                    connected_subgraphs = connected_subgraphs.union(self.get_connected_subgraphs_dfs(query_graph_copy, join2, level))
-                    
-                    for subgraph in connected_subgraphs:
-                        new_subgraph = frozenset(subgraph + (join1, join2))
-                        subgraph = frozenset(subgraph)
-                        new_variables = {}
+                    for joined in joined_rels:
                         
-                        for var in self.variables[subgraph]:
+                        if (rel1 in joined and rel2 not in joined) or (rel1 not in joined and rel2 in joined):
                             
-                            if new_subgraph not in new_variables:
-                                new_variables[new_subgraph] = []
+                            new_joined = joined.union(frozenset([rel1, rel2]))
+                            added_variables = []
                             
-                            new_variables[new_subgraph].append(Variable(self.relations, self.selectivities, new_subgraph, subgraph, join1, join2, level, var.get_labeling()))
-                        
-                        for new_s in new_variables:
-                            if new_s in self.variables:
-                                self.variables[new_s].extend(new_variables[new_s])
+                            for var in self.variables[joined]:
+                                added_variables.append(Variable(self.relations, self.selectivities, new_joined, rel1, rel2, level, var.get_labeling()))
+                                
+                            if new_joined in self.variables:
+                                self.variables[new_joined].extend(added_variables)
                             else:
-                                self.variables[new_s] = new_variables[new_s]
+                                self.variables[new_joined] = added_variables      
         
         for v in self.variables:
             for var in self.variables[v]:
                 labeling = var.get_labeling()
                 self.variables_dict[tuple(labeling)] = var.get_local_cost()
                 
-    
+        #for e in self.variables_dict:
+        #    print(e, self.variables_dict[e])
+                
         self.hubo = dimod.BinaryPolynomial(self.variables_dict, dimod.Vartype.BINARY)
         self.hubo_total_cost = dimod.BinaryPolynomial(self.variables_dict, dimod.Vartype.BINARY)
         self.hubo.normalize()
         self.hubo_variables = self.hubo.variables
-        #print("Number of variables: ", len(self.hubo_variables))
+        print("Number of variables: ", len(self.hubo_variables))
+        print("Number of terms in HUBO: ", len(self.hubo))
+        self.normalized_variable_dict, off = self.hubo.to_hubo()
+    
+    
+    def construct_estimate_cost_function(self, estimation_size = 1000):
+        for level in self.levels:
+            
+            last_levels_mins = [math.inf for _ in range(estimation_size)]
+            min_keys = [None for _ in range(estimation_size)]
+            
+            if level > 0:
+                for var in self.variables:
+                    if self.variables[var][-1].get_level() == level - 1:
+                        var_with_level = self.variables[var][-1]
+                        last_levels_min = var_with_level.get_local_cost()
+                        
+                        if last_levels_min < max(last_levels_mins):
+                            index = last_levels_mins.index(max(last_levels_mins))
+                            last_levels_mins[index] = last_levels_min
+                            min_keys[index] = var
+            #else:
+            #    for edge in self.query_graph.edges(data=True):
+            #        join1, join2 = edge[0], edge[1]
+            #        cost = self.relations[join1]["cardinality"] * self.relations[join2]["cardinality"] * self.selectivities[(join1, join2)]["selectivity"]
+            #        if cost < max(last_levels_mins):
+            #            index = last_levels_mins.index(max(last_levels_mins))
+            #            last_levels_mins[index] = cost
+            #            min_keys[index] = frozenset([join1, join2])
+                            
+            min_keys = [min_key for min_key in min_keys if min_key is not None]
+            
+            for edge in self.query_graph.edges(data=True):
+                
+                join1, join2 = edge[0], edge[1]
+                
+                if level == 0:
+                    #for min_key in min_keys:
+                    subgraph = frozenset([edge[0], edge[1]])
+                    self.variables[subgraph] = [Variable(self.relations, self.selectivities, subgraph, edge[0], edge[1], level, [])]
+                else:
+                    for min_key in min_keys:
+                        if (join1 in min_key and join2 not in min_key) or (join1 not in min_key and join2 in min_key):
+                            new_subgraph = frozenset(tuple(min_key) + (join1, join2))
+                            labeling = self.variables[min_key][-1].get_labeling()
+                            if new_subgraph in self.variables:
+                                self.variables[new_subgraph].append(Variable(self.relations, self.selectivities, new_subgraph, join1, join2, level, labeling))
+                            else:
+                                self.variables[new_subgraph] = [Variable(self.relations, self.selectivities, new_subgraph, join1, join2, level, labeling)]
+                      
+        for v in self.variables:
+            for var in self.variables[v]:
+                labeling = var.get_labeling()
+                self.variables_dict[tuple(labeling)] = var.get_local_cost()
+                
+        #for e in self.variables_dict:
+        #    print(e, self.variables_dict[e])
+        
+        self.hubo = dimod.BinaryPolynomial(self.variables_dict, dimod.Vartype.BINARY)
+        self.hubo_total_cost = dimod.BinaryPolynomial(self.variables_dict, dimod.Vartype.BINARY)
+        self.hubo.normalize()
+        self.hubo_variables = self.hubo.variables
+        print("Number of variables: ", len(self.hubo_variables))
+        print("Number of terms in HUBO: ", len(self.hubo))
         self.normalized_variable_dict, off = self.hubo.to_hubo()
 
 
     # At every level we perform exactly one join
-    def every_level_one_join(self):
+    def every_level_has_one_join(self, relative_scaler=1):
+        scaler = relative_scaler*self.scaler
         for l in self.variables_by_levels:
             vars = self.variables_by_levels[l]
-            bqm = dimod.generators.combinations(vars, 1, strength = 1)
-            
-            for bvar in bqm.linear:
-                self.safe_append(self.validity_constraints, (bvar,), bqm.linear[bvar], mode="int")
-            
-            for bvar in bqm.quadratic:
-                self.safe_append(self.validity_constraints, bvar, bqm.quadratic[bvar], mode="int")
-    
-                 
-    # (x - a - b - c)^2 = a^2 + 2 a b + 2 a c - 2 a x + b^2 + 2 b c - 2 b x + c^2 - 2 c x + x^2
-    def combinations_with_variable(self, x, vars, scaler = 1):
-        result = {}
-        result[(x,)] = scaler
-        for v in vars:
-            result[(v,)] = scaler
-            result[(x, v)] = -2 * scaler
-        
-        for comb in combinations(vars, 2):
-            result[comb] = 2 * scaler
-        
-        return result
-    
-    # (1 + 2*x_2 + ... + max_number_of_levels * x_n - sum over table vars)^2
-    def table_number_constraint(self, tables, table_id, scaler = 1):
-        integer_vars = []
-        N = self.max_number_of_levels
-        M = int(np.floor(np.log2(N)))
-        result = {}
-        
-        # x_0 = 1 is fixed
-        for i in range(1, M + 1):
-            if i == M:
-                integer_vars.append((f'table_{table_id}_{i}', (N + 1 - 2**M)))
-            integer_vars.append((f'table_{table_id}_{i}', 2**i))
-        
-        for int_var in integer_vars:
-            result[(int_var[0],)] = scaler * (int_var[1]**2 + 2 * int_var[1])
-        
-        for table in tables:
-            result[(table,)] = -scaler
-        
-        for x, y in combinations(integer_vars + tables, 2):
-            if x in integer_vars and y in integer_vars:
-                result[(x[0], y[0])] = 2 * scaler * x[1] * y[1]
-            elif x in integer_vars and y in tables:
-                result[(x[0], y)] = -2 * scaler * x[1]
-            elif x in tables and y in integer_vars:
-                result[(x, y[0])] = -2 * scaler * y[1]
+            if len(vars) > 0:
+                bqm = dimod.generators.combinations(vars, 1, strength = scaler)
+                for bvar in bqm.linear:
+                    self.safe_append(self.validity_constraints, (bvar,), bqm.linear[bvar], mode="int")
+                for bvar in bqm.quadratic:
+                    self.safe_append(self.validity_constraints, bvar, bqm.quadratic[bvar], mode="int")
             else:
-                result[(x, y)] = 2 * scaler
-        
-        return result
-    
-    def construct_validity_constraints_1(self):
-        # Encode (1 - labelings for variables[frozenset({0, 1, 2, 3, 4})])^2
-        # (1 - x - y - z)^2 = x^2 + 2 x y + 2 x z - 2 x + y^2 + 2 y z - 2 y + z^2 - 2 z + 1
-        # = -x - y - z + 2 x y + 2 x z + 2 y z + 1    
+                print("No variables at level ", l)
+
+
+    # Encode (1 - labelings for variables[frozenset({0, 1, 2, 3, 4})])^2
+    # (1 - x - y - z)^2 = x^2 + 2 x y + 2 x z - 2 x + y^2 + 2 y z - 2 y + z^2 - 2 z + 1
+    # = -x - y - z + 2 x y + 2 x z + 2 y z + 1
+    # This is the same function as dimod.generators.combinations but for higher-order models
+    def hubo_combinations(self):
         scaler = self.scaler
         labelings_for_full_join = [var.get_labeling() for var in self.variables[frozenset(self.query_graph.nodes)]]
         for labeling in labelings_for_full_join:
@@ -265,26 +281,28 @@ class QJoin:
                 self.validity_constraints[prod] = 2*scaler
                 
                 
-    def construct_validity_constraints_2(self):
-        # select exactly n_joins many different joins
+    # select exactly n_joins many different joins            
+    def construct_validity_constraints_2(self, relative_scaler=1):
+        scaler = relative_scaler*self.scaler
         aux_vars = []
         for x, vars in self.variables_by_joins.items():
             aux_var = 'aux_' + str(x)
             aux_vars.append(aux_var)
-            combs = self.combinations_with_variable(aux_var, vars, scaler=3)
+            combs = combinations_with_variable(aux_var, vars, scaler=scaler)
             for comb in combs:
                 self.safe_append(self.validity_constraints, comb, combs[comb], mode="int")
         # Select exactly n_joins many aux_vars to be true
-        bqm = dimod.generators.combinations(aux_vars, self.max_number_of_levels, strength=3)
+        bqm = dimod.generators.combinations(aux_vars, self.max_number_of_levels, strength=scaler)
         for bvar in bqm.linear:
             self.safe_append(self.validity_constraints, (bvar,), bqm.linear[bvar], mode="int")
         for bvar in bqm.quadratic:
             self.safe_append(self.validity_constraints, bvar, bqm.quadratic[bvar], mode="int")
+          
                 
-                
-    def construct_validity_constraints_3(self):
-        # level + 1 should be connecte to level so that if (x, y, l) and (x', y', l + 1) and x != x' and y != y' then (x, y, l) and (x', y', l + 1) should be penalized
-        scaler = 5
+    # level + 1 should be connected to level so that if (x, y, l) and (x', y', l + 1) 
+    # and x != x' and y != y' then (x, y, l) and (x', y', l + 1) should be penalized
+    def construct_validity_constraints_3(self, relative_scaler=1):
+        scaler = relative_scaler*self.scaler
         for level in self.levels[1:]:
             join_vars = self.variables_by_levels[level]
             prev_join_vars = self.variables_by_levels[level - 1]
@@ -294,10 +312,12 @@ class QJoin:
                         # Penalize if two joins are not connected
                         self.safe_append(self.validity_constraints, (var1, var2), scaler, mode="int")
     
-    def construct_validity_constraints_4(self):
-        # Every table has to appear at least once (max as many times as the number of joins)
+    
+    # Every table has to appear at least once (max as many times as the number of joins)
+    def construct_validity_constraints_4(self, relative_scaler=1):
+        scaler = relative_scaler*self.scaler
         for table_id, tables in self.variables_by_tables.items():
-            combs = self.table_number_constraint(tables, table_id, scaler=1)
+            combs = table_number_constraint(self.max_number_of_levels, tables, table_id, scaler=scaler)
             for comb in combs:
                 self.safe_append(self.validity_constraints, comb, combs[comb], mode="int")
     
@@ -310,7 +330,9 @@ class QJoin:
     
     
     def construct_BQM(self, strength=5):
-        problem_dict, off = self.full_hubo.to_hubo()
+        bqm_hubo = self.full_hubo.copy()
+        bqm_hubo.normalize()
+        problem_dict, off = bqm_hubo.to_hubo()
         self.bqm = dimod.make_quadratic(problem_dict, strength = strength, vartype = dimod.Vartype.BINARY)
     
     
@@ -320,9 +342,14 @@ class QJoin:
         self.samplesets["exact_poly_solver"] = result
         return result
     
+    def solve_with_exact_BQM_solver(self):
+        solver = dimod.ExactSolver()
+        result = solver.sample(self.bqm)
+        self.samplesets["exact_BQM_solver"] = result
+        return result
     
-    def solve_with_TabuSampler(self, num_reads=1000, strength=5):
-        self.construct_BQM(strength)
+    
+    def solve_with_TabuSampler(self, num_reads=1000):
         sampler = TabuSampler()
         result = sampler.sample(self.bqm, num_reads=num_reads)
         self.samplesets["tabu"] = result
@@ -330,15 +357,13 @@ class QJoin:
     
     
     def solve_with_simulated_annealing(self):
-        self.construct_BQM()
         sampler = SimulatedAnnealingSampler()
-        result = sampler.sample(self.bqm)
+        result = sampler.sample(self.bqm, num_reads=1000)
         self.samplesets["simulated_annealing"] = result
         return result
     
     
     def solve_with_steepest_descent(self):
-        self.construct_BQM()
         sampler = SteepestDescentSampler()
         result = sampler.sample(self.bqm)
         self.samplesets["steepest_descent"] = result
@@ -416,13 +441,13 @@ class QJoin:
             with gp.read(self.lp_file, env) as model:  # type: ignore
                 if not print_log:
                     model.Params.LogToConsole = 0
-                model.Params.LogFile = self.name +  "_gurobi.log"
+                model.Params.LogFile = "logs//" + self.name +  "_gurobi.log"
                 model.Params.OutputFlag = 1
                 model.Params.LogLevel = 1
                 model.Params.MIPFocus = 0 # aims to find a single optimal solution
                 model.Params.PoolSearchMode = 0 # No need for multiple solutions
                 model.Params.PoolGap = 0.0 # Only provably optimal solutions are added to the pool
-                #model.Params.TimeLimit = 30
+                model.Params.TimeLimit = 240
                 #model.Params.Threads = 8
                 #model.presolve() # Decreases quality of solutions
                 time_start = time.time()
@@ -439,3 +464,22 @@ class QJoin:
                                         "time": elapsed_time, "energy": min_energy, 
                                         "status": status }
         return self.samplesets["gurobi"]
+    
+    
+    def solve_with_qaoa_pennylane(self):
+        qaoa = QuantumApproximateOptimizationAlgorithm(self.bqm, {})
+        qaoa.solve_with_QAOA_pennylane()
+        return qaoa.samplesets["qaoa_pennylane"]
+    
+    
+    def get_number_of_hubo_variables(self):
+        return len(self.full_hubo.variables)
+    
+    def get_number_of_bqm_variables(self):
+        return len(self.bqm.variables)
+    
+    def get_number_of_hubo_terms(self):
+        return len(self.full_hubo)
+    
+    def get_number_of_bqm_terms(self):
+        return len(self.bqm.linear) + len(self.bqm.quadratic)

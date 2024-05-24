@@ -1,0 +1,29 @@
+{
+    "Graph with 3 nodes and 3 edges": {
+        "hubo_variables": 6,
+        "hubo_terms": 33,
+        "bqm_variables": 15,
+        "bqm_terms": 62,
+        "number_of_nodes": 3,
+        "number_of_edges": 3,
+        "avarage_join_tree_cost": 117.4338596101157
+    },
+    "Graph with 4 nodes and 6 edges": {
+        "hubo_variables": 18,
+        "hubo_terms": 2427,
+        "bqm_variables": 366,
+        "bqm_terms": 3637,
+        "number_of_nodes": 4,
+        "number_of_edges": 6,
+        "avarage_join_tree_cost": 390.1533784129633
+    },
+    "Graph with 5 nodes and 10 edges": {
+        "hubo_variables": 40,
+        "hubo_terms": 861970,
+        "bqm_variables": 15484,
+        "bqm_terms": 921653,
+        "number_of_nodes": 5,
+        "number_of_edges": 10,
+        "avarage_join_tree_cost": 3181.558730090462
+    }
+}

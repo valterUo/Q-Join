@@ -1,0 +1,56 @@
+{
+    "Graph with 4 nodes and 4 edges": {
+        "hubo_variables": 12,
+        "hubo_terms": 166,
+        "bqm_variables": 52,
+        "bqm_terms": 299,
+        "number_of_nodes": 4,
+        "number_of_edges": 4,
+        "avarage_join_tree_cost": 1874.2753425842695
+    },
+    "Graph with 5 nodes and 5 edges": {
+        "hubo_variables": 20,
+        "hubo_terms": 860,
+        "bqm_variables": 283,
+        "bqm_terms": 1829,
+        "number_of_nodes": 5,
+        "number_of_edges": 5,
+        "avarage_join_tree_cost": 214705.3782149163
+    },
+    "Graph with 6 nodes and 6 edges": {
+        "hubo_variables": 30,
+        "hubo_terms": 4395,
+        "bqm_variables": 952,
+        "bqm_terms": 7852,
+        "number_of_nodes": 6,
+        "number_of_edges": 6,
+        "avarage_join_tree_cost": 36116.60488900706
+    },
+    "Graph with 7 nodes and 7 edges": {
+        "hubo_variables": 42,
+        "hubo_terms": 22932,
+        "bqm_variables": 4067,
+        "bqm_terms": 38441,
+        "number_of_nodes": 7,
+        "number_of_edges": 7,
+        "avarage_join_tree_cost": 4470224317.084406
+    },
+    "Graph with 8 nodes and 8 edges": {
+        "hubo_variables": 56,
+        "hubo_terms": 115516,
+        "bqm_variables": 11182,
+        "bqm_terms": 158337,
+        "number_of_nodes": 8,
+        "number_of_edges": 8,
+        "avarage_join_tree_cost": 29686993505.38213
+    },
+    "Graph with 9 nodes and 9 edges": {
+        "hubo_variables": 72,
+        "hubo_terms": 580842,
+        "bqm_variables": 42729,
+        "bqm_terms": 746301,
+        "number_of_nodes": 9,
+        "number_of_edges": 9,
+        "avarage_join_tree_cost": 3037011721.5905504
+    }
+}
