@@ -39,6 +39,15 @@ class Solver:
             
         if solver == "qaoa_pennylane":
             self.solve_with_QAOA_pennylane()
+            
+        if solver == "dwave_LeapHybridSampler":
+            self.solve_with_dwave("LeapHybridSampler")
+        
+        if solver == "dwave_DWaveSampler":
+            self.solve_with_dwave("DWaveSampler")
+        
+        if solver == "dwave_Kerberos":
+            self.solve_with_dwave("Kerberos")
     
     
     def compute_variable_statistics(self):
@@ -184,6 +193,56 @@ class Solver:
         
         
     def solve_with_QAOA_pennylane(self):
-        quantum_result = self.qjoin.solve_with_QAOA_pennylane()
-        append_to_json(self.experiment_name, str(self.query_graph), quantum_result)
+        quantum_result = self.qjoin.solve_with_qaoa_pennylane()
+        
+        sim_res = {}
+        for var in quantum_result["result"]:
+            if quantum_result["result"][var] == 1 and "*" not in var:
+                sim_res[eval(var)] = 1
+        tuples = list(sim_res.keys())
+        join = build_nested_list(tuples)
+        sim_res = {str(k) : v for k, v in sim_res.items()}
+        classical_cost = basic_cost(join, self.qjoin.relations, self.qjoin.selectivities)
+        classic_solution = self.qjoin.solve_with_dynamic_programming()
+        stored_result = {"join" : join, 
+                         "qaoa": quantum_result, 
+                         "cost": classical_cost, 
+                         "optimal_cost": classic_solution[1], 
+                         "optimal_solution": classic_solution[0],
+                         "found_optimal": bool(np.isclose(classical_cost, classic_solution[1], atol=1e-5)),
+                         "plans_are_equal": compare_nested_lists(join, classic_solution[0])}
+        
+        append_to_json(self.experiment_name, str(self.query_graph), stored_result)
+        
+        
+    def solve_with_dwave(self, sampler):
+        
+        if sampler == "LeapHybridSampler":
+            quantum_result = self.qjoin.solve_with_LeapHybridSampler()
+        elif sampler == "DWaveSampler":
+            quantum_result = self.qjoin.solve_with_DWave_Sampler()
+        elif sampler == "Kerberos":
+            quantum_result = self.qjoin.solve_with_KerberosSampler()
+            
+        sim_res = {}
+        for var in quantum_result.first.sample:
+            if quantum_result.first.sample[var] == 1 and "*" not in var:
+                sim_res[var] = 1
+        tuples = list(sim_res.keys())
+        join = build_nested_list(tuples)
+        classical_cost = basic_cost(join, self.qjoin.relations, self.qjoin.selectivities)
+        classic_solution = self.qjoin.solve_with_dynamic_programming()
+        #quantum_cost = self.qjoin.evaluate_cost(sim_res)
+        quantum_cost = 0
+        sim_res = {str(k) : v for k, v in sim_res.items()}
+        
+        stored_result = {"solution": sim_res, 
+                         "join" : join, 
+                         "cost": classical_cost, 
+                         "optimal_cost": classic_solution[1], 
+                         "optimal_solution": classic_solution[0],
+                         "found_optimal": bool(np.isclose(quantum_cost, classic_solution[1], atol=1e-5)),
+                         "plans_are_equal": compare_nested_lists(join, classic_solution[0])}
+        
+        append_to_json(self.experiment_name, str(self.query_graph), stored_result)
         

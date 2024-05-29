@@ -23,19 +23,24 @@ class QuantumApproximateOptimizationAlgorithm:
         
     def solve_with_QAOA_pennylane(self):
         start_time = time.time()
-        depth = 2
+        depth = 1
         H = QAOAPennylane(self.bqm, depth)
         circuit = H.get_circuit()
         offset = H.get_offset()
         num_of_qubits = len(H.get_variables())
-        optimizer = qml.GradientDescentOptimizer() #qml.NesterovMomentumOptimizer()
+        optimizer = qml.AdamOptimizer() #qml.SPSAOptimizer() #qml.NesterovMomentumOptimizer() #qml.GradientDescentOptimizer()
         steps = 1000
         params = 0.1 * nnp.random.rand(2, depth, requires_grad=True) #nnp.array([[0.5]*depth, [0.5]*depth], requires_grad=True)
 
-        fig, ax = qml.draw_mpl(circuit)(params)
-        fig.savefig("QAOA_circuit_pennylane.png")
+        try:
+            fig, ax = qml.draw_mpl(circuit, expansion_strategy="device")(params)
+            fig.savefig("QAOA_circuit_pennylane.png")
+        except:
+            print("Could not draw the circuit")
         
-        for _ in range(steps):
+        for i in range(steps):
+            if i % 100 == 0:
+                print("Step: ", i)
             params = optimizer.step(circuit, params)
         # Get the final value
         energy = circuit(params)
@@ -50,14 +55,15 @@ class QuantumApproximateOptimizationAlgorithm:
         end_time = time.time()
         # get the probability of the solution
         solution_prob = probs[max_arg]
-        #print("Solution probability: ", solution_prob)
+        print("Solution probability: ", solution_prob)
         # get the probability of the second most probable solution
         first_excited_state_prob = probs[np.argsort(probs)[-2]]
-        #print("First excited state probability: ", first_excited_state_prob)
+        print("First excited state probability: ", first_excited_state_prob)
         # Because the problem was encoded with Ising model, 
         # we convert the result back to QUBO: |0> -> 1 and |1> -> -1
         # This means that the measured 0s represent the solution to the problem
         result = dict(zip(H.get_variables(), [(int(i) + 1) % 2 for i in result_bin]))
+        result = {str(k) : v for k, v in result.items()}
         self.samplesets["qaoa_pennylane"] = { "result": result, 
                                              "n_qubits": num_of_qubits, 
                                              "solution_prob": solution_prob.numpy(),

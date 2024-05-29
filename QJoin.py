@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import gurobipy as gp
 from dwave.system import LeapHybridSampler
+from dwave.system import EmbeddingComposite, DWaveSampler
 from hybrid.reference import KerberosSampler
 from dwave.samplers import TabuSampler, SteepestDescentSolver, SimulatedAnnealingSampler, TreeDecompositionSolver, SteepestDescentSampler
 
@@ -19,7 +20,7 @@ from utils import combinations_with_variable, get_connected_subgraphs_with_dfs, 
 
 class QJoin:
     
-    def __init__(self, query_graph, scaler=1, hubo_to_bqm_strength=5, approximation = False):
+    def __init__(self, query_graph, scaler=1, hubo_to_bqm_strength=5, method_name = "precise", create_bqm = True):
         self.query_graph = query_graph
         self.scaler = scaler
         # For left-deep plan the max number of levels in the same as number of nodes - 1
@@ -49,32 +50,48 @@ class QJoin:
         self.lp_file = "lp_files//" + str(query_graph) + "_qubo.lp"
         self.name = str(query_graph)
         
-        if approximation:
-            self.construct_estimate_cost_function()
+        
+        if method_name == "precise":
+            self.construct_presice_cost_function()
             self.group_variables()
-            # Hard constraints
             self.every_level_has_one_join()
             self.hubo_combinations()
             
-            # Hard constraints
+        elif method_name == "precise_improved":
+            
+            self.construct_presice_cost_function()
+            self.group_variables()
+            self.every_level_has_one_join()
+            self.construct_validity_constraints_3()
+            self.every_join_performed_at_most_once()
+             
+        elif method_name == "heuristic_1":
+            
+            self.construct_estimate_cost_function()
+            
+            self.group_variables()
+            self.every_level_has_one_join()
+            self.hubo_combinations()
+            
             #self.every_level_has_one_join()
             #self.construct_validity_constraints_2()
             #self.construct_validity_constraints_3()
             #self.construct_validity_constraints_4()
-            #print("Hard constraints constructed")
-        else:
-            start = time.time()
-            self.construct_presice_cost_function()
-            end = time.time()
-            print("Time for constructing precise cost function: ", end - start)
-            self.group_variables()
-            # Hard constraints
-            self.every_level_has_one_join()
-            self.hubo_combinations()
+        
+        elif method_name == "heuristic_2":
             
+            self.construct_estimate_cost_function()
+            
+            self.group_variables()
+            self.every_level_has_one_join()
+            self.construct_validity_constraints_3()
+            self.every_join_performed_at_most_once()
+        
+        
         self.construct_full_hubo()
-        self.construct_BQM(strength=hubo_to_bqm_strength)
-        print("Number of terms in QUBO: ", len(self.bqm.linear) + len(self.bqm.quadratic))
+        if create_bqm:
+            self.construct_BQM(hubo_to_bqm_strength)
+            print("Number of terms in QUBO: ", len(self.bqm.linear) + len(self.bqm.quadratic))
             
     
     
@@ -98,7 +115,7 @@ class QJoin:
                 alpha=1.0          # Set transparency
             )
 
-        plt.savefig("results//" + name)
+        plt.savefig(name)
     
     
     def safe_append(self, dictionary, key, value, mode="list"):
@@ -116,11 +133,9 @@ class QJoin:
     
     def group_variables(self):
         self.variables_by_levels = {}
-        for level in self.levels:
-            self.variables_by_levels[level] = []
-            for v in self.hubo_variables:
-                if v[2] == level:
-                    self.variables_by_levels[level].append(v)
+        for var in self.hubo_variables:
+            level = var[-1]
+            self.safe_append(self.variables_by_levels, level, var)    
                     
         self.variables_by_joins = {}
         for var in self.hubo_variables:
@@ -197,14 +212,6 @@ class QJoin:
                             index = last_levels_mins.index(max(last_levels_mins))
                             last_levels_mins[index] = last_levels_min
                             min_keys[index] = var
-            #else:
-            #    for edge in self.query_graph.edges(data=True):
-            #        join1, join2 = edge[0], edge[1]
-            #        cost = self.relations[join1]["cardinality"] * self.relations[join2]["cardinality"] * self.selectivities[(join1, join2)]["selectivity"]
-            #        if cost < max(last_levels_mins):
-            #            index = last_levels_mins.index(max(last_levels_mins))
-            #            last_levels_mins[index] = cost
-            #            min_keys[index] = frozenset([join1, join2])
                             
             min_keys = [min_key for min_key in min_keys if min_key is not None]
             
@@ -245,7 +252,11 @@ class QJoin:
 
     # At every level we perform exactly one join
     def every_level_has_one_join(self, relative_scaler=1):
-        scaler = relative_scaler*self.scaler
+        #scaler = 1 #relative_scaler*self.scaler
+        #scaler = len(self.query_graph.edges)*self.variables[frozenset(self.query_graph.nodes)][0].get_local_cost()  #self.scaler
+        #print("Scaler: ", scaler)
+        scaler = self.scaler
+        
         for l in self.variables_by_levels:
             vars = self.variables_by_levels[l]
             if len(vars) > 0:
@@ -256,6 +267,16 @@ class QJoin:
                     self.safe_append(self.validity_constraints, bvar, bqm.quadratic[bvar], mode="int")
             else:
                 print("No variables at level ", l)
+                
+    
+    def every_join_performed_at_most_once(self, relative_scaler=1):
+        scaler = self.scaler
+        #scaler = len(self.query_graph.edges)*self.variables[frozenset(self.query_graph.nodes)][0].get_local_cost()
+        for join in self.variables_by_joins:
+            join_vars = self.variables_by_joins[join]
+            combs = combinations_with_variable('a' + str(join), join_vars, scaler=scaler)
+            for comb in combs:
+                self.safe_append(self.validity_constraints, comb, combs[comb], mode="int")
 
 
     # Encode (1 - labelings for variables[frozenset({0, 1, 2, 3, 4})])^2
@@ -263,11 +284,16 @@ class QJoin:
     # = -x - y - z + 2 x y + 2 x z + 2 y z + 1
     # This is the same function as dimod.generators.combinations but for higher-order models
     def hubo_combinations(self):
+        #scaler = len(self.query_graph.edges)*self.variables[frozenset(self.query_graph.nodes)][0].get_local_cost()  #self.scaler
+        #print("Scaler: ", scaler)
         scaler = self.scaler
         labelings_for_full_join = [var.get_labeling() for var in self.variables[frozenset(self.query_graph.nodes)]]
+        #print("Number of labelings: ", len(labelings_for_full_join))
+        #print("Labelings: ", labelings_for_full_join)
         for labeling in labelings_for_full_join:
             
             if tuple(labeling) in self.validity_constraints:
+                
                 self.validity_constraints[tuple(labeling)] = self.validity_constraints[tuple(labeling)] - scaler
             else:
                 self.validity_constraints[tuple(labeling)] = -scaler
@@ -302,14 +328,17 @@ class QJoin:
     # level + 1 should be connected to level so that if (x, y, l) and (x', y', l + 1) 
     # and x != x' and y != y' then (x, y, l) and (x', y', l + 1) should be penalized
     def construct_validity_constraints_3(self, relative_scaler=1):
+        #scaler = len(self.query_graph.edges)*self.variables[frozenset(self.query_graph.nodes)][0].get_local_cost()
+        #print("Scaler: ", scaler)
         scaler = relative_scaler*self.scaler
         for level in self.levels[1:]:
             join_vars = self.variables_by_levels[level]
             prev_join_vars = self.variables_by_levels[level - 1]
             for var1 in join_vars:
                 for var2 in prev_join_vars:
-                    if var1[0] != var2[0] and var1[1] != var2[1]:
+                    if (var1[0] != var2[0] and var1[1] != var2[1] and var1[0] != var2[1] and var1[1] != var2[0]) or (var1[0] == var2[0] and var1[1] == var2[1]):
                         # Penalize if two joins are not connected
+                        #print(var1, var2)
                         self.safe_append(self.validity_constraints, (var1, var2), scaler, mode="int")
     
     
@@ -326,12 +355,12 @@ class QJoin:
         full_variable_dict = self.normalized_variable_dict.copy()
         for var in self.validity_constraints:
             self.safe_append(full_variable_dict, var, self.validity_constraints[var], mode="int")
-        self.full_hubo = dimod.BinaryPolynomial(full_variable_dict, dimod.Vartype.BINARY)            
+        self.full_hubo = dimod.BinaryPolynomial(full_variable_dict, dimod.Vartype.BINARY)
+        #self.full_hubo.normalize()           
     
     
-    def construct_BQM(self, strength=5):
+    def construct_BQM(self, strength):
         bqm_hubo = self.full_hubo.copy()
-        bqm_hubo.normalize()
         problem_dict, off = bqm_hubo.to_hubo()
         self.bqm = dimod.make_quadratic(problem_dict, strength = strength, vartype = dimod.Vartype.BINARY)
     
@@ -447,7 +476,7 @@ class QJoin:
                 model.Params.MIPFocus = 0 # aims to find a single optimal solution
                 model.Params.PoolSearchMode = 0 # No need for multiple solutions
                 model.Params.PoolGap = 0.0 # Only provably optimal solutions are added to the pool
-                model.Params.TimeLimit = 240
+                model.Params.TimeLimit = 120 #1000
                 #model.Params.Threads = 8
                 #model.presolve() # Decreases quality of solutions
                 time_start = time.time()
@@ -467,19 +496,43 @@ class QJoin:
     
     
     def solve_with_qaoa_pennylane(self):
-        qaoa = QuantumApproximateOptimizationAlgorithm(self.bqm, {})
+        qaoa = QuantumApproximateOptimizationAlgorithm(self.full_hubo, {})
         qaoa.solve_with_QAOA_pennylane()
         return qaoa.samplesets["qaoa_pennylane"]
+    
+    
+    def solve_with_LeapHybridSampler(self):
+        sampler = LeapHybridSampler()
+        result = sampler.sample(self.bqm)
+        self.samplesets["leap_hybrid"] = result
+        return result
+    
+    
+    def solve_with_DWave_Sampler(self):
+        sampler = EmbeddingComposite(DWaveSampler())
+        result = sampler.sample(self.bqm)
+        self.samplesets["dwave"] = result
+        return result
+    
+    
+    def solve_with_KerberosSampler(self):
+        sampler = KerberosSampler()
+        result = sampler.sample(self.bqm)
+        self.samplesets["kerberos"] = result
+        return result
     
     
     def get_number_of_hubo_variables(self):
         return len(self.full_hubo.variables)
     
+    
     def get_number_of_bqm_variables(self):
         return len(self.bqm.variables)
     
+    
     def get_number_of_hubo_terms(self):
         return len(self.full_hubo)
+    
     
     def get_number_of_bqm_terms(self):
         return len(self.bqm.linear) + len(self.bqm.quadratic)

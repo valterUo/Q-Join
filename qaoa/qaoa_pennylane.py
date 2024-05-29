@@ -31,7 +31,7 @@ class QAOAPennylane:
         elif type(self.bqm) == dimod.BinaryQuadraticModel:
             h, J, offset = self.bqm.to_ising()
         
-        dev = qml.device("default.qubit", wires=n_vars)
+        dev = qml.device("lightning.qubit", wires=n_vars)
 
         vars_to_obs = {v: qml.PauliZ(i) for v, i in variables_to_qubits.items()}
         coeffs, obs = [], []

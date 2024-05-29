@@ -1,0 +1,41 @@
+{
+    "Graph with 5 nodes and 4 edges": {
+        "solution": {
+            "(3, 4, 3)": 1,
+            "(1, 2, 0)": 1,
+            "(2, 3, 2)": 1,
+            "(0, 1, 1)": 1
+        },
+        "join": [
+            4,
+            [
+                3,
+                [
+                    0,
+                    [
+                        1,
+                        2
+                    ]
+                ]
+            ]
+        ],
+        "cost": 4,
+        "time": 0.04402613639831543,
+        "optimal_cost": 4,
+        "optimal_solution": [
+            4,
+            [
+                3,
+                [
+                    2,
+                    [
+                        1,
+                        0
+                    ]
+                ]
+            ]
+        ],
+        "found_optimal": true,
+        "plans_are_equal": false
+    }
+}

@@ -1,0 +1,135 @@
+{
+    "Graph with 3 nodes and 2 edges": {
+        "solution": {
+            "(0, 2, 1)": 1,
+            "(0, 1, 0)": 1
+        },
+        "join": [
+            2,
+            [
+                0,
+                1
+            ]
+        ],
+        "cost": 117.03225836692556,
+        "time": 0.011000633239746094,
+        "optimal_cost": 117.03225836692556,
+        "optimal_solution": [
+            2,
+            [
+                1,
+                0
+            ]
+        ],
+        "found_optimal": true,
+        "plans_are_equal": true
+    },
+    "Graph with 4 nodes and 3 edges": {
+        "solution": {
+            "(0, 3, 2)": 1,
+            "(0, 1, 1)": 1,
+            "(0, 2, 0)": 1
+        },
+        "join": [
+            3,
+            [
+                1,
+                [
+                    0,
+                    2
+                ]
+            ]
+        ],
+        "cost": 9895.977926824979,
+        "time": 0.023000717163085938,
+        "optimal_cost": 9895.977926824979,
+        "optimal_solution": [
+            3,
+            [
+                1,
+                [
+                    2,
+                    0
+                ]
+            ]
+        ],
+        "found_optimal": true,
+        "plans_are_equal": true
+    },
+    "Graph with 5 nodes and 4 edges": {
+        "solution": {
+            "(0, 2, 1)": 1,
+            "(0, 4, 2)": 1,
+            "(0, 1, 0)": 1,
+            "(0, 3, 3)": 1
+        },
+        "join": [
+            3,
+            [
+                4,
+                [
+                    2,
+                    [
+                        0,
+                        1
+                    ]
+                ]
+            ]
+        ],
+        "cost": 249066.0389758552,
+        "time": 0.2219996452331543,
+        "optimal_cost": 249066.03897585516,
+        "optimal_solution": [
+            3,
+            [
+                [
+                    2,
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                4
+            ]
+        ],
+        "found_optimal": true,
+        "plans_are_equal": true
+    },
+    "Graph with 6 nodes and 5 edges": {
+        "solution": {
+            "(0, 4, 0)": 1,
+            "(0, 2, 2)": 1,
+            "(0, 2, 1)": 1,
+            "(0, 2, 3)": 1,
+            "(0, 2, 4)": 1
+        },
+        "join": [
+            2,
+            [
+                0,
+                4
+            ]
+        ],
+        "cost": 57.382300162834404,
+        "time": 240.49593806266785,
+        "optimal_cost": 23473.071842818317,
+        "optimal_solution": [
+            5,
+            [
+                2,
+                [
+                    3,
+                    [
+                        1,
+                        [
+                            4,
+                            0
+                        ]
+                    ]
+                ]
+            ]
+        ],
+        "found_optimal": false,
+        "plans_are_equal": false
+    }
+}

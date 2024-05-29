@@ -1,0 +1,6 @@
+graph = "chain"
+method_name = "precise"
+min_n_nodes = 3
+max_n_nodes = 6
+solver_name =  "exact_poly_solver"
+scalers = [0, 0, 0, 2, 2, 2, 2]
