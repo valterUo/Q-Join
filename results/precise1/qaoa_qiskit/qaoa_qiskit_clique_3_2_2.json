@@ -1,0 +1,32 @@
+{
+    "Graph with 3 nodes and 3 edges": {
+        "join": [
+            0,
+            [
+                1,
+                2
+            ]
+        ],
+        "qaoa": {
+            "(1, 2, 1)": 1,
+            "(0, 2, 1)": 1,
+            "(0, 1, 0)": 0,
+            "(1, 2, 0)": 1,
+            "(0, 2, 0)": 0,
+            "(0, 1, 1)": 1
+        },
+        "cost": 163.86218946317575,
+        "qaoa_cost": 3.1301890441309386,
+        "probability": 0.140625,
+        "optimal_cost": 79.67997195370575,
+        "optimal_solution": [
+            2,
+            [
+                1,
+                0
+            ]
+        ],
+        "found_optimal": false,
+        "plans_are_equal": false
+    }
+}

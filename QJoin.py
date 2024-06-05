@@ -500,6 +500,11 @@ class QJoin:
         qaoa.solve_with_QAOA_pennylane()
         return qaoa.samplesets["qaoa_pennylane"]
     
+    def solve_with_qaoa_qiskit(self):
+        qaoa = QuantumApproximateOptimizationAlgorithm(self.full_hubo, {})
+        qaoa.solve_with_QAOA_Qiskit2()
+        return qaoa.samplesets["qaoa_qiskit"]
+    
     
     def solve_with_LeapHybridSampler(self):
         sampler = LeapHybridSampler()
