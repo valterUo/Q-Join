@@ -40,6 +40,9 @@ class Solver:
         if solver == "qaoa_pennylane":
             self.solve_with_QAOA_pennylane()
             
+        if solver == "qaoa_qiskit":
+            self.solve_with_QAOA_qiskit()
+            
         if solver == "dwave_LeapHybridSampler":
             self.solve_with_dwave("LeapHybridSampler")
         
@@ -196,14 +199,17 @@ class Solver:
         quantum_result = self.qjoin.solve_with_qaoa_pennylane()
         
         sim_res = {}
+        
         for var in quantum_result["result"]:
             if quantum_result["result"][var] == 1 and "*" not in var:
                 sim_res[eval(var)] = 1
+        
         tuples = list(sim_res.keys())
         join = build_nested_list(tuples)
         sim_res = {str(k) : v for k, v in sim_res.items()}
         classical_cost = basic_cost(join, self.qjoin.relations, self.qjoin.selectivities)
         classic_solution = self.qjoin.solve_with_dynamic_programming()
+        
         stored_result = {"join" : join, 
                          "qaoa": quantum_result, 
                          "cost": classical_cost, 
@@ -211,6 +217,36 @@ class Solver:
                          "optimal_solution": classic_solution[0],
                          "found_optimal": bool(np.isclose(classical_cost, classic_solution[1], atol=1e-5)),
                          "plans_are_equal": compare_nested_lists(join, classic_solution[0])}
+        
+        append_to_json(self.experiment_name, str(self.query_graph), stored_result)
+        
+    
+    def solve_with_QAOA_qiskit(self):
+        quantum_result = self.qjoin.solve_with_qaoa_qiskit()
+        
+        print(quantum_result)
+        qaoa_cost = float(quantum_result["optimal_cost"].real)
+        probability = quantum_result["probability"]
+        #initial_point = quantum_result["initial_point"]
+        sim_res = {}
+        for var in quantum_result["result"]:
+            if quantum_result["result"][var] == 1 and "*" not in var:
+                sim_res[var] = 1
+        tuples = list(sim_res.keys())
+        join = build_nested_list(tuples)
+        sim_res = {str(k) : v for k, v in sim_res.items()}
+        classical_cost = basic_cost(join, self.qjoin.relations, self.qjoin.selectivities)
+        classic_solution = self.qjoin.solve_with_dynamic_programming()
+        stored_result = {"join" : join,
+                         "qaoa": {str(k) : v for k, v in quantum_result["result"].items()},
+                         "cost": classical_cost,
+                         "qaoa_cost" : qaoa_cost,
+                         "probability": probability,
+                         "optimal_cost": classic_solution[1], 
+                         "optimal_solution": classic_solution[0],
+                         "found_optimal": bool(np.isclose(classical_cost, classic_solution[1], atol=1e-5)),
+                         "plans_are_equal": compare_nested_lists(join, classic_solution[0]) }
+                         #"initial_point": initial_point }
         
         append_to_json(self.experiment_name, str(self.query_graph), stored_result)
         

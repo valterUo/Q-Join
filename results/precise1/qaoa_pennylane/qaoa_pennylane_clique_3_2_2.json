@@ -17,11 +17,18 @@
                 "(0, 1, 1)": 1
             },
             "n_qubits": 6,
+<<<<<<< HEAD:results/precise/qaoa_pennylane/qaoa_pennylane_clique_3_2_2.json
             "solution_prob": 0.035774646395049264,
             "first_excited_state_prob": 0.03568271301130293,
             "offset": 3.9431146714624488,
             "time": 137.27530169487,
             "energy": -5.03023915580207
+=======
+            "solution_prob": 0.9992516844268218,
+            "first_excited_state_prob": 0.0006450220814947733,
+            "offset": 3.9431146714624488,
+            "time": 163.90181827545166
+>>>>>>> 8f4205e73038c909829813cd14003ad0e30d58aa:results/precise1/qaoa_pennylane/qaoa_pennylane_clique_3_2_2.json
         },
         "cost": 163.86218946317575,
         "optimal_cost": 79.67997195370575,
