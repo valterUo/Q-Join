@@ -27,6 +27,7 @@ class QAOAPennylane:
         variables_to_qubits = dict(zip(self.variables, range(n_vars)))
         
         if type(self.bqm) == dimod.BinaryPolynomial:
+            self.bqm = self.bqm.to_spin()
             h, J, offset = self.bqm.to_hising()
         elif type(self.bqm) == dimod.BinaryQuadraticModel:
             h, J, offset = self.bqm.to_ising()
