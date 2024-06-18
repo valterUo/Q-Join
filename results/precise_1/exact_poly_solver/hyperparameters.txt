@@ -1,0 +1,7 @@
+graph = "tree"
+method_name = "precise_1"
+min_n_nodes = 3
+max_n_nodes = 6
+solver_name = "exact_poly_solver"
+hubo_to_bqm_strengths = [0, 0, 0, 2, 2, 2, 4, 10]
+scalers = [0, 0, 0, 2, 2, 2, 4, 8]

@@ -22,10 +22,13 @@ from qaoa_qiskit import QAOAQiskit
 
 from scipy.optimize import minimize
 
-import jax
-import jax.numpy as jnp
-import optax
-from jax import random
+try:
+    import jax
+    import jax.numpy as jnp
+    import optax
+    from jax import random
+except ModuleNotFoundError:
+    print("JAX is not installed.")
 
 class QuantumApproximateOptimizationAlgorithm:
     
@@ -124,18 +127,6 @@ class QuantumApproximateOptimizationAlgorithm:
         max_arg = np.argmax(probs)
         result_bin = np.binary_repr(max_arg, width=num_of_qubits)
         end_time = time.time()
-<<<<<<< HEAD
-        # get the probability of the solution
-        solution_prob = float(probs[max_arg])
-        print("Solution probability: ", solution_prob)
-        # get the probability of the second most probable solution
-        first_excited_state_prob = float(probs[np.argsort(probs)[-2]])
-        print("First excited state probability: ", first_excited_state_prob)
-        # Because the problem was encoded with Ising model, 
-        # we convert the result back to QUBO: |0> -> 1 and |1> -> -1
-        # This means that the measured 0s represent the solution to the problem
-        result = dict(zip(H.get_variables(), [(int(i) + 1) % 2 for i in result_bin]))
-=======
         solution_prob = float(probs[max_arg])
         print("Solution probability: ", solution_prob)
         first_excited_state_prob = float(probs[np.argsort(probs)[-2]])
@@ -146,7 +137,6 @@ class QuantumApproximateOptimizationAlgorithm:
         for i, b in enumerate(result_bin):
             result[qubits_to_variables[i]] = (int(b) + 1) % 2
         
->>>>>>> 8f4205e73038c909829813cd14003ad0e30d58aa
         #result = dict(zip(H.get_variables(), [int(i) for i in result_bin]))
         result = {str(k) : v for k, v in result.items()}
         
@@ -155,12 +145,7 @@ class QuantumApproximateOptimizationAlgorithm:
                                              "solution_prob": solution_prob,
                                              "first_excited_state_prob": first_excited_state_prob,
                                              "offset": offset,
-<<<<<<< HEAD
-                                             "time": end_time - start_time,
-                                             "energy": energy}
-=======
                                              "time": end_time - start_time }
->>>>>>> 8f4205e73038c909829813cd14003ad0e30d58aa
         #for var, value in self.samplesets["qaoa_pennylane"].items():
         #    print(var, type(value))
         return self.samplesets["qaoa_pennylane"]

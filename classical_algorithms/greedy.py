@@ -1,3 +1,42 @@
+from itertools import combinations
+
+from classical_algorithms.weights_costs import basic_cost
+
+
+def greedy(query_graph, relations, selectivities):
+    join_result = []
+    tables = query_graph.nodes()
+    min_cost = float('inf')
+    
+    #relations = {table: {"cardinality": table["cardinality"]} for table in tables}
+    #selectivities = {(table1, table2): {"selectivity": query_graph[table1][table2]["selectivity"]} for table1, table2 in query_graph.edges()}
+    
+    for table1, table2 in query_graph.edges():
+        selectivity = query_graph[table1][table2]["selectivity"]
+        current_cost = relations[table1]["cardinality"] * relations[table2]["cardinality"]*selectivity
+        if current_cost < min_cost:
+            min_cost = current_cost
+            join_result = [table1, table2]
+    
+    joined_tables = [table for table in join_result]
+    
+    for _ in range(len(query_graph.edges) - 1):
+        min_cost = float('inf')
+        current_min_table = None
+        for table in tables:
+            if table not in joined_tables:
+                current_join_tree = [table, join_result]
+                current_cost = basic_cost(current_join_tree, relations, selectivities)
+                if current_cost < min_cost:
+                    min_cost = current_cost
+                    current_min_table = table
+        if current_min_table is not None:
+            joined_tables.append(current_min_table)
+            join_result = [current_min_table, join_result]
+    
+    return join_result
+
+
 def GreedyJoinOrdering1(relations, w):
     ordered_joins = []
     while len(relations) > 1:

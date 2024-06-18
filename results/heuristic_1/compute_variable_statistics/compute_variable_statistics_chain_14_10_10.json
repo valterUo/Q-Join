@@ -1,0 +1,12 @@
+{
+    "Graph with 14 nodes and 13 edges": {
+        "hubo_variables": 17,
+        "hubo_terms": 61,
+        "bqm_variables": 35,
+        "bqm_terms": 129,
+        "number_of_nodes": 14,
+        "number_of_edges": 13,
+        "method": "heuristic_1",
+        "avarage_join_tree_cost": 175136027852670.88
+    }
+}

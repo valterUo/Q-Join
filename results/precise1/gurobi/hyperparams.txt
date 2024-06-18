@@ -1,7 +1,0 @@
-graph = "chain"
-method_name = "precise"
-min_n_nodes = 8
-max_n_nodes = 12
-solver_name =  "gurobi"
-hubo_to_bqm_strengths = [0, 0, 0, 1000, 1000, 10000, 100000, 100]
-scalers = [0, 0, 0, 1000, 1000, 1000, 1000, 100]

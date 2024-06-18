@@ -1,0 +1,15 @@
+graph = "chain"
+method_name = "precise_1"
+min_n_nodes = 11
+max_n_nodes = 11
+solver_name = "dwave_LeapHybridSampler"
+hubo_to_bqm_strengths = [0, 0, 0, 2, 2, 2, 4, 10, 10, 10, 10, 100]
+scalers = [0, 0, 0, 2, 2, 2, 4, 8, 8, 8, 8, 100]
+
+graph = "star"
+method_name = "precise_1"
+min_n_nodes = 7
+max_n_nodes = 8
+solver_name = "dwave_LeapHybridSampler"
+hubo_to_bqm_strengths = [0, 0, 0, 2, 2, 2, 4, 10]
+scalers = [0, 0, 0, 2, 2, 2, 4, 8]

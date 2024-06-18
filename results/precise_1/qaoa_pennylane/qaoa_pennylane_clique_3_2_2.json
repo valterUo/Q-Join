@@ -1,0 +1,37 @@
+{
+    "Graph with 3 nodes and 3 edges": {
+        "join": [
+            0,
+            [
+                1,
+                2
+            ]
+        ],
+        "qaoa": {
+            "result": {
+                "(1, 2, 1)": 0,
+                "(0, 2, 1)": 1,
+                "(0, 1, 0)": 0,
+                "(1, 2, 0)": 1,
+                "(0, 2, 0)": 1,
+                "(0, 1, 1)": 1
+            },
+            "n_qubits": 6,
+            "solution_prob": 0.9992516844268218,
+            "first_excited_state_prob": 0.0006450220814947733,
+            "offset": 3.9431146714624488,
+            "time": 163.90181827545166
+        },
+        "cost": 163.86218946317575,
+        "optimal_cost": 79.67997195370575,
+        "optimal_solution": [
+            2,
+            [
+                1,
+                0
+            ]
+        ],
+        "found_optimal": false,
+        "plans_are_equal": false
+    }
+}

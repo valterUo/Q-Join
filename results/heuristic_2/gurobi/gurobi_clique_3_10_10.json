@@ -1,0 +1,35 @@
+{
+    "Graph with 3 nodes and 3 edges": {
+        "solution": {
+            "(0, 1, 0)": 1,
+            "(1, 2, 1)": 1
+        },
+        "join": [
+            2,
+            [
+                0,
+                1
+            ]
+        ],
+        "cost": 79.67997195370575,
+        "time": 0.0169985294342041,
+        "optimal_cost": 79.67997195370575,
+        "optimal_solution": [
+            2,
+            [
+                1,
+                0
+            ]
+        ],
+        "found_optimal": true,
+        "plans_are_equal": true,
+        "greedy_cost": 79.67997195370575,
+        "greedy_solution": [
+            2,
+            [
+                0,
+                1
+            ]
+        ]
+    }
+}

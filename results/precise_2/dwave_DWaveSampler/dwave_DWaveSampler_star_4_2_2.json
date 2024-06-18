@@ -1,0 +1,33 @@
+{
+    "Graph with 4 nodes and 3 edges": {
+        "solution": {
+            "(0, 1, 1)": 1,
+            "(0, 3, 0)": 1,
+            "(0, 2, 0)": 1
+        },
+        "join": [
+            1,
+            [
+                2,
+                [
+                    0,
+                    3
+                ]
+            ]
+        ],
+        "cost": 11049.227949548655,
+        "optimal_cost": 9895.977926824979,
+        "optimal_solution": [
+            3,
+            [
+                1,
+                [
+                    2,
+                    0
+                ]
+            ]
+        ],
+        "found_optimal": false,
+        "plans_are_equal": false
+    }
+}

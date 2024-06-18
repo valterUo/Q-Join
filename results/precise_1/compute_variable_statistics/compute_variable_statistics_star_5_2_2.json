@@ -1,0 +1,12 @@
+{
+    "Graph with 5 nodes and 4 edges": {
+        "hubo_variables": 16,
+        "hubo_terms": 358,
+        "bqm_variables": 190,
+        "bqm_terms": 1020,
+        "number_of_nodes": 5,
+        "number_of_edges": 4,
+        "method": "precise_1",
+        "avarage_join_tree_cost": 298339.09634105297
+    }
+}

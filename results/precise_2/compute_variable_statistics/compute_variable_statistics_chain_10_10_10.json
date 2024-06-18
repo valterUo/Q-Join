@@ -1,0 +1,12 @@
+{
+    "Graph with 10 nodes and 9 edges": {
+        "hubo_variables": 113,
+        "hubo_terms": 2799,
+        "bqm_variables": 371,
+        "bqm_terms": 3668,
+        "number_of_nodes": 10,
+        "number_of_edges": 9,
+        "method": "precise_2",
+        "avarage_join_tree_cost": 3970694628463.902
+    }
+}

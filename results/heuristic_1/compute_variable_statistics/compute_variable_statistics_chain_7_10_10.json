@@ -1,0 +1,12 @@
+{
+    "Graph with 7 nodes and 6 edges": {
+        "hubo_variables": 11,
+        "hubo_terms": 44,
+        "bqm_variables": 28,
+        "bqm_terms": 106,
+        "number_of_nodes": 7,
+        "number_of_edges": 6,
+        "method": "heuristic_1",
+        "avarage_join_tree_cost": 8148056908.423825
+    }
+}
