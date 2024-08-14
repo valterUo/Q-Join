@@ -1,0 +1,44 @@
+{
+    "Graph with 4 nodes and 6 edges": {
+        "solution": {
+            "(0, 3, 2)": 1,
+            "(1, 2, 0)": 1
+        },
+        "join": [
+            [
+                0,
+                3
+            ],
+            [
+                1,
+                2
+            ]
+        ],
+        "cost": 316.9196942427057,
+        "time": 0.04899907112121582,
+        "optimal_cost": 61.41654470704924,
+        "optimal_solution": [
+            0,
+            [
+                3,
+                [
+                    2,
+                    1
+                ]
+            ]
+        ],
+        "found_optimal": false,
+        "plans_are_equal": false,
+        "greedy_cost": 61.41654470704924,
+        "greedy_solution": [
+            0,
+            [
+                3,
+                [
+                    1,
+                    2
+                ]
+            ]
+        ]
+    }
+}

@@ -1,0 +1,81 @@
+{
+    "Graph with 7 nodes and 21 edges": {
+        "solution": {
+            "(1, 2, 1)": 1,
+            "(2, 4, 0)": 1,
+            "(0, 1, 3)": 1,
+            "(1, 6, 2)": 1,
+            "(4, 5, 4)": 1,
+            "(3, 4, 5)": 1,
+            "(2, 3, 5)": 1
+        },
+        "join": [
+            3,
+            [
+                5,
+                [
+                    0,
+                    [
+                        6,
+                        [
+                            1,
+                            [
+                                2,
+                                4
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ],
+        "cost": 35.70094960257987,
+        "time": 0.1421213150024414,
+        "optimal_cost": 35.700949602579854,
+        "optimal_solution": [
+            3,
+            [
+                5,
+                [
+                    0,
+                    [
+                        6,
+                        [
+                            [
+                                4,
+                                2
+                            ],
+                            1
+                        ]
+                    ]
+                ]
+            ]
+        ],
+        "found_optimal": false,
+        "plans_are_equal": true,
+        "greedy_cost": 35.70094960257987,
+        "greedy_solution": [
+            3,
+            [
+                5,
+                [
+                    0,
+                    [
+                        6,
+                        [
+                            1,
+                            [
+                                2,
+                                4
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ],
+        "number_of_nodes": 7,
+        "number_of_edges": 21,
+        "method": "heuristic_1",
+        "graph_type": "clique",
+        "estimation_size": 1
+    }
+}

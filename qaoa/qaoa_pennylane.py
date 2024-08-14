@@ -5,9 +5,12 @@ from pennylane.operation import Tensor
 from pennylane import qaoa
 from scipy.sparse.linalg import eigsh
 
-import jax
-from jax import numpy as jnp
-jax.config.update("jax_enable_x64", True)
+try:
+    import jax
+    from jax import numpy as jnp
+    jax.config.update("jax_enable_x64", True)
+except ModuleNotFoundError:
+    print("JAX not found.")
 
 class QAOAPennylane:
 

@@ -1,0 +1,12 @@
+{
+    "Graph with 3 nodes and 3 edges": {
+        "hubo_variables": 15,
+        "hubo_terms": 57,
+        "bqm_variables": 15,
+        "bqm_terms": 57,
+        "number_of_nodes": 3,
+        "number_of_edges": 3,
+        "method": "precise_2",
+        "avarage_join_tree_cost": 117.4338596101157
+    }
+}

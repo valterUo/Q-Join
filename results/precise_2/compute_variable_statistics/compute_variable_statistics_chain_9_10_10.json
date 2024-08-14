@@ -1,0 +1,12 @@
+{
+    "Graph with 9 nodes and 8 edges": {
+        "hubo_variables": 95,
+        "hubo_terms": 1814,
+        "bqm_variables": 232,
+        "bqm_terms": 2274,
+        "number_of_nodes": 9,
+        "number_of_edges": 8,
+        "method": "precise_2",
+        "avarage_join_tree_cost": 3083345408.5341845
+    }
+}
