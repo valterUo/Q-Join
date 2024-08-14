@@ -12,15 +12,14 @@ from hybrid.reference import KerberosSampler
 from dwave.samplers import TabuSampler, SimulatedAnnealingSampler, SteepestDescentSampler
 
 from classical_algorithms.dynamic_programming import dynamic_programming
-from classical_algorithms.greedy import greedy, greedy_with_query_graph
+from classical_algorithms.greedy import greedy
 from classical_algorithms.weights_costs import basic_cost
 from qaoa.qaoa import QuantumApproximateOptimizationAlgorithm
 from utils import combinations_with_variable, table_number_constraint, Variable
 
 class QJoin:
     
-    def __init__(self, graph_type, query_graph, scaler=1, hubo_to_bqm_strength=5, method_name = "precise_1", estimation_size = None, create_bqm = True):
-        self.graph_type = graph_type
+    def __init__(self, query_graph, scaler=1, hubo_to_bqm_strength=5, method_name = "precise_1", create_bqm = True):
         self.query_graph = query_graph
         self.scaler = scaler
         # For left-deep plan the max number of levels in the same as number of nodes - 1
@@ -70,7 +69,7 @@ class QJoin:
              
         elif method_name == "heuristic_1":
             #print("Constructing cost function...")
-            self.construct_estimate_cost_function(estimation_size = estimation_size)
+            self.construct_estimate_cost_function()
             self.group_variables()
             #print("Every level has one join...")
             self.every_level_has_one_join()
@@ -78,7 +77,7 @@ class QJoin:
             self.hubo_combinations()
         
         elif method_name == "heuristic_2":
-            self.construct_estimate_cost_function(estimation_size = estimation_size)
+            self.construct_estimate_cost_function()
             self.group_variables()
             self.every_level_has_one_join()
             self.construct_validity_constraints_2()
@@ -221,7 +220,7 @@ class QJoin:
                                 new_var = Variable(self.relations, self.selectivities, new_subgraph, rel1, rel2, level, labeling)
                                 added_subgraphs.append(new_var)
                             
-                            #print("Number of added subgraphs: ", len(added_subgraphs), " for level: ", level, " and subgraph: ", new_subgraph)
+                            print("Number of added subgraphs: ", len(added_subgraphs), " for level: ", level, " and subgraph: ", new_subgraph)
                             
                             #Limit the number of variables to be added from added_subgraphs
                             if len(added_subgraphs) > estimation_size and level < self.max_number_of_levels - 1:
@@ -229,8 +228,8 @@ class QJoin:
                                 
                                 added_subgraphs = sorted(added_subgraphs, key=lambda x: x.get_local_cost())
                                 added_subgraphs = added_subgraphs[:estimation_size]
-                                #for a in added_subgraphs:
-                                #    print("Labeling: ", a.get_labeling(), "Cost: ", a.get_local_cost())
+                                for a in added_subgraphs:
+                                    print("Labeling: ", a.get_labeling(), "Cost: ", a.get_local_cost())
                             
                             for vvv in added_subgraphs:
                                 if new_subgraph in self.variables:
@@ -266,8 +265,8 @@ class QJoin:
         for key in del_keys:
             del self.variables_dict[key]
             
-        #for e in self.variables_dict:
-        #    print(e, self.variables_dict[e])
+        for e in self.variables_dict:
+            print(e, self.variables_dict[e])
         
         self.hubo = dimod.BinaryPolynomial(self.variables_dict, dimod.Vartype.BINARY)
         self.hubo_total_cost = dimod.BinaryPolynomial(self.variables_dict, dimod.Vartype.BINARY)
@@ -498,10 +497,10 @@ class QJoin:
                     model.Params.LogToConsole = 0
                 model.Params.LogFile = "logs//" + self.name +  "_gurobi.log"
                 model.Params.OutputFlag = 1
-                model.Params.MIPFocus = 0 # aims to find a single optimal solution
-                model.Params.PoolSearchMode = 0 # No need for multiple solutions
-                model.Params.PoolGap = 0.0 # Only provably optimal solutions are added to the pool
-                model.Params.TimeLimit = 500
+                #model.Params.MIPFocus = 0 # aims to find a single optimal solution
+                #model.Params.PoolSearchMode = 0 # No need for multiple solutions
+                #model.Params.PoolGap = 0.0 # Only provably optimal solutions are added to the pool
+                model.Params.TimeLimit = 1500
                 model.Params.NumericFocus = 3
                 #model.Params.Threads = 8
                 #model.presolve() # Decreases quality of solutions
@@ -553,15 +552,10 @@ class QJoin:
         return result
     
     def solve_with_greedy(self):
-        result = greedy(self.relations, self.selectivities)
+        result = greedy(self.query_graph, self.relations, self.selectivities)
+        #print(result)
         cost = basic_cost(result, self.relations, self.selectivities)
         self.samplesets["greedy"] = { "result": result, "cost": cost }
-        return result, cost
-    
-    def solve_with_greedy_with_query_graph(self):
-        result = greedy_with_query_graph(self.query_graph, self.relations, self.selectivities)
-        cost = basic_cost(result, self.relations, self.selectivities)
-        self.samplesets["greedy_with_query_graph"] = { "result": result, "cost": cost }
         return result, cost
     
     

@@ -143,8 +143,6 @@ class Solver:
             
         greedy_solution = self.qjoin.solve_with_greedy()
         
-        greedy_solution_with_graph = self.qjoin.solve_with_greedy_with_query_graph()
-        
         stored_result = {"solution": gurobi_res_pos, 
                          "join" : join, 
                          "cost": classical_cost, 
@@ -154,14 +152,7 @@ class Solver:
                          "found_optimal": found_optimal,
                          "plans_are_equal": compare_nested_lists(join, classic_solution[0]),
                          "greedy_cost": greedy_solution[1],
-                         "greedy_solution": greedy_solution[0],
-                         "greedy_with_graph_cost": greedy_solution_with_graph[1],
-                         "greedy_with_graph_solution": greedy_solution_with_graph[0],
-                         "number_of_nodes": len(self.query_graph.nodes),
-                         "number_of_edges": len(self.query_graph.edges),
-                         "method": self.qjoin.method_name,
-                         "graph_type": self.qjoin.graph_type,
-                         "estimation_size": self.qjoin.estimation_size}
+                         "greedy_solution": greedy_solution[0]}
         
         append_to_json(self.experiment_name, str(self.query_graph), stored_result)
     

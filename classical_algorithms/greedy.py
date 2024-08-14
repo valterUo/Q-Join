@@ -3,31 +3,24 @@ from itertools import combinations
 from classical_algorithms.weights_costs import basic_cost
 
 
-def greedy(relations, selectivities):
+def greedy(query_graph, relations, selectivities):
     join_result = []
-    tables = relations.keys() #query_graph.nodes()
+    tables = query_graph.nodes()
     min_cost = float('inf')
     
     #relations = {table: {"cardinality": table["cardinality"]} for table in tables}
     #selectivities = {(table1, table2): {"selectivity": query_graph[table1][table2]["selectivity"]} for table1, table2 in query_graph.edges()}
-    processed_tables = []
-    for table1 in relations:
-        for table2 in relations:
-            if table1 != table2 and (table1 not in processed_tables or table2 not in processed_tables):
-                selectivity = 1
-                if (table1, table2) in selectivities:
-                    selectivity = selectivities[(table1, table2)]["selectivity"]
-                elif (table2, table1) in selectivities:
-                    selectivity = selectivities[(table2, table1)]["selectivity"]
-                current_cost = relations[table1]["cardinality"] * relations[table2]["cardinality"] * selectivity
-                if current_cost < min_cost:
-                    min_cost = current_cost
-                    join_result = [table1, table2]
-                processed_tables += [table1, table2]
+    
+    for table1, table2 in query_graph.edges():
+        selectivity = query_graph[table1][table2]["selectivity"]
+        current_cost = relations[table1]["cardinality"] * relations[table2]["cardinality"]*selectivity
+        if current_cost < min_cost:
+            min_cost = current_cost
+            join_result = [table1, table2]
     
     joined_tables = [table for table in join_result]
     
-    for _ in range(len(selectivities) - 1):
+    for _ in range(len(query_graph.edges) - 1):
         min_cost = float('inf')
         current_min_table = None
         for table in tables:
