@@ -1,0 +1,54 @@
+{
+    "Graph with 3 nodes and 3 edges": {
+        "solution": [
+            {
+                "(0, 1, 0)": 1,
+                "(1, 2, 1)": 1
+            }
+        ],
+        "join": [
+            2,
+            [
+                0,
+                1
+            ]
+        ],
+        "cost": 49147.11104448107,
+        "time": 0.5321040153503418,
+        "estimation_size": 20,
+        "optimal_cost": 49147.11104448107,
+        "optimal_solution": [
+            2,
+            [
+                1,
+                0
+            ]
+        ],
+        "graph_aware_dynamic_programming_cost": 49147.11104448107,
+        "graph_aware_dynamic_programming_solution": [
+            2,
+            [
+                1,
+                0
+            ]
+        ],
+        "greedy_cost": 49147.11104448107,
+        "greedy_solution": [
+            2,
+            [
+                0,
+                1
+            ]
+        ],
+        "graph_aware_greedy_cost": 49147.11104448107,
+        "graph_aware_greedy_solution": [
+            2,
+            [
+                0,
+                1
+            ]
+        ],
+        "found_optimal": 20,
+        "plans_are_equal": 20
+    }
+}

@@ -198,7 +198,25 @@ def append_to_json(file, key, data):
     with open(file, 'r') as f:
         json_data = json.load(f)
     
-    json_data[key] = data
+    #json_data[key] = data
+    if len(json_data) == 1:
+        key = list(json_data.keys())[0]
+    
+    if key not in json_data:
+        json_data[key] = data
+    else:
+        old_data = json_data[key]
+        # append data to the old data
+        for k in old_data:
+            if k in data:
+                if isinstance(old_data[k], list):
+                    pass
+                    #old_data[key].extend(data[key])
+                else:
+                    old_data[k] = old_data[k] + data[k]
+            else:
+                old_data[k] = data[k]
+        json_data[key] = old_data
     
     with open(file, 'w') as f:
         json.dump(json_data, f, indent=4)
@@ -230,3 +248,11 @@ def compare_nested_lists(list1, list2):
             return False
     
     return True
+
+def flatten(container):
+    for i in container:
+        if isinstance(i, (list,tuple)):
+            for j in flatten(i):
+                yield j
+        else:
+            yield i

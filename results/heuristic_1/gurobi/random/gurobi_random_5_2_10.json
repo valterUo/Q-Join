@@ -1,0 +1,86 @@
+{
+    "Graph with 5 nodes and 5 edges": {
+        "solution": [
+            {
+                "(0, 4, 0)": 1,
+                "(1, 4, 1)": 1,
+                "(2, 3, 3)": 1,
+                "(1, 2, 2)": 1
+            }
+        ],
+        "join": [
+            3,
+            [
+                2,
+                [
+                    1,
+                    [
+                        0,
+                        4
+                    ]
+                ]
+            ]
+        ],
+        "cost": 3088912.5454379288,
+        "time": 8.38041377067566,
+        "estimation_size": 30,
+        "optimal_cost": 3075961.1150635406,
+        "optimal_solution": [
+            3,
+            [
+                4,
+                [
+                    0,
+                    [
+                        2,
+                        1
+                    ]
+                ]
+            ]
+        ],
+        "graph_aware_dynamic_programming_cost": 3088912.5454379288,
+        "graph_aware_dynamic_programming_solution": [
+            3,
+            [
+                2,
+                [
+                    1,
+                    [
+                        0,
+                        4
+                    ]
+                ]
+            ]
+        ],
+        "greedy_cost": 3078726.9829374845,
+        "greedy_solution": [
+            3,
+            [
+                2,
+                [
+                    1,
+                    [
+                        0,
+                        4
+                    ]
+                ]
+            ]
+        ],
+        "graph_aware_greedy_cost": 3127116.9872151264,
+        "graph_aware_greedy_solution": [
+            3,
+            [
+                2,
+                [
+                    1,
+                    [
+                        0,
+                        4
+                    ]
+                ]
+            ]
+        ],
+        "found_optimal": 9,
+        "plans_are_equal": 9
+    }
+}

@@ -1,0 +1,87 @@
+{
+    "Graph with 5 nodes and 5 edges": {
+        "solution": [
+            {
+                "(0, 4, 0)": 1,
+                "(0, 1, 1)": 1,
+                "(2, 3, 3)": 1,
+                "(3, 4, 2)": 1,
+                "(1, 2, 2)": 1
+            }
+        ],
+        "join": [
+            2,
+            [
+                3,
+                [
+                    1,
+                    [
+                        0,
+                        4
+                    ]
+                ]
+            ]
+        ],
+        "cost": 8010661.859046442,
+        "energy": -26.78680293288884,
+        "estimation_size": 34,
+        "dynamic_programming_cost": 8033640.078179611,
+        "dynamic_programming_solution": [
+            3,
+            [
+                4,
+                [
+                    2,
+                    [
+                        1,
+                        0
+                    ]
+                ]
+            ]
+        ],
+        "graph_aware_dynamic_programming_cost": 8039455.055300486,
+        "graph_aware_dynamic_programming_solution": [
+            3,
+            [
+                4,
+                [
+                    2,
+                    [
+                        1,
+                        0
+                    ]
+                ]
+            ]
+        ],
+        "greedy_cost": 8038365.136644466,
+        "greedy_solution": [
+            3,
+            [
+                4,
+                [
+                    2,
+                    [
+                        0,
+                        1
+                    ]
+                ]
+            ]
+        ],
+        "graph_aware_greedy_cost": 8044180.113765341,
+        "graph_aware_greedy_solution": [
+            3,
+            [
+                4,
+                [
+                    2,
+                    [
+                        0,
+                        1
+                    ]
+                ]
+            ]
+        ],
+        "found_optimal": 0,
+        "plans_are_equal": 2
+    }
+}

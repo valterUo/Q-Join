@@ -11,22 +11,21 @@ from dwave.system import EmbeddingComposite, DWaveSampler
 from hybrid.reference import KerberosSampler
 from dwave.samplers import TabuSampler, SimulatedAnnealingSampler, SteepestDescentSampler
 
-from classical_algorithms.dynamic_programming import dynamic_programming
-from classical_algorithms.greedy import greedy
+from classical_algorithms.dynamic_programming import dynamic_programming, graph_aware_dynamic_programming
+from classical_algorithms.greedy import greedy, greedy_with_query_graph
 from classical_algorithms.weights_costs import basic_cost
 from qaoa.qaoa import QuantumApproximateOptimizationAlgorithm
 from utils import combinations_with_variable, table_number_constraint, Variable
 
 class QJoin:
     
-    def __init__(self, query_graph, scaler=1, hubo_to_bqm_strength=5, method_name = "precise_1", create_bqm = True):
+    def __init__(self, query_graph, scaler=1, hubo_to_bqm_strength=5, method_name = "precise_1", create_bqm = True, estimation_size = 2):
         self.query_graph = query_graph
         self.scaler = scaler
         # For left-deep plan the max number of levels in the same as number of nodes - 1
         # For bushy plan the max number of levels is less but it's always the following value
         self.max_number_of_levels = len(query_graph.nodes) - 1 #len(nx.cycle_basis(query_graph))
         self.estimation_size = estimation_size
-        
         self.levels = range(self.max_number_of_levels)
 
         self.relations = {}
@@ -54,37 +53,32 @@ class QJoin:
         if method_name == "precise_1":
             self.construct_presice_cost_function()
             self.group_variables()
-            self.every_level_has_one_join()
+            self.every_rank_appears_exactly_once()
+            self.hubo_combinations()
+            
+        elif method_name == "heuristic_1":
+            self.construct_estimate_cost_function()
+            self.group_variables()
+            self.every_rank_appears_exactly_once()
             self.hubo_combinations()
             
         elif method_name == "precise_2":
             self.construct_presice_cost_function()
             self.group_variables()
-            self.every_level_has_one_join()
+            self.every_rank_appears_exactly_once()
             self.construct_validity_constraints_2()
             self.construct_validity_constraints_3()
             self.construct_validity_constraints_4()
-            self.every_join_performed_at_most_once()
-            self.every_level_appears_once()
-             
-        elif method_name == "heuristic_1":
-            #print("Constructing cost function...")
-            self.construct_estimate_cost_function()
-            self.group_variables()
-            #print("Every level has one join...")
-            self.every_level_has_one_join()
-            #print("Creating combinations...")
-            self.hubo_combinations()
+            #self.every_join_performed_at_most_once()
         
         elif method_name == "heuristic_2":
             self.construct_estimate_cost_function()
             self.group_variables()
-            self.every_level_has_one_join()
+            self.every_rank_appears_exactly_once()
             self.construct_validity_constraints_2()
             self.construct_validity_constraints_3()
             self.construct_validity_constraints_4()
-            self.every_join_performed_at_most_once()
-            self.every_level_appears_once()
+            #self.every_join_performed_at_most_once()
         
         self.method_name = method_name
         self.construct_full_hubo()
@@ -181,28 +175,29 @@ class QJoin:
         self.hubo_total_cost = dimod.BinaryPolynomial(self.variables_dict, dimod.Vartype.BINARY)
         self.hubo.normalize()
         self.hubo_variables = self.hubo.variables
-        #print("Number of variables: ", len(self.hubo_variables))
-        #print("Number of terms in HUBO: ", len(self.hubo))
+        print("Number of variables: ", len(self.hubo_variables))
+        print("Number of terms in HUBO: ", len(self.hubo))
         self.normalized_variable_dict, off = self.hubo.to_hubo()
     
     
-    def construct_estimate_cost_function(self, estimation_size = 3):
+    def construct_estimate_cost_function(self):
         for level in self.levels:
-            #print("Level: ", level)
-            min_keys = [(None, math.inf) for _ in range(estimation_size)]
+            
+            # Select the sub-plans with the minimum cost from the previous level
+            # similar to the greedy approach
+            # ----------------------------------------------
+            min_keys = [(None, math.inf) for _ in range(self.estimation_size)]
             if level > 0:
                 for var in self.variables:
                     for v in self.variables[var]:
                         if v.get_level() == level - 1:
                             last_levels_min = v.get_local_cost()
-                            
                             second_terms = [key[1] for key in min_keys]
                             if last_levels_min < max(second_terms) and last_levels_min not in second_terms:
                                 index = second_terms.index(max(second_terms))
-                                min_keys[index] = (var, last_levels_min)
-                                
-            min_keys = sorted(min_keys, key=lambda x: x[1])
+                                min_keys[index] = (var, last_levels_min)                   
             min_keys = [min_key[0] for min_key in min_keys if min_key[0] is not None]
+            # ----------------------------------------------
             
             for edge in self.query_graph.edges(data=True):
                 rel1, rel2 = edge[0], edge[1]
@@ -220,42 +215,27 @@ class QJoin:
                                 new_var = Variable(self.relations, self.selectivities, new_subgraph, rel1, rel2, level, labeling)
                                 added_subgraphs.append(new_var)
                             
-                            print("Number of added subgraphs: ", len(added_subgraphs), " for level: ", level, " and subgraph: ", new_subgraph)
-                            
-                            #Limit the number of variables to be added from added_subgraphs
-                            if len(added_subgraphs) > estimation_size and level < self.max_number_of_levels - 1:
-                                # Sort the added_subgraphs by their local cost
-                                
-                                added_subgraphs = sorted(added_subgraphs, key=lambda x: x.get_local_cost())
-                                added_subgraphs = added_subgraphs[:estimation_size]
-                                for a in added_subgraphs:
-                                    print("Labeling: ", a.get_labeling(), "Cost: ", a.get_local_cost())
-                            
                             for vvv in added_subgraphs:
                                 if new_subgraph in self.variables:
                                     self.variables[new_subgraph].append(vvv)
                                 else:
                                     self.variables[new_subgraph] = [vvv]
-        
-        labelings_for_full_join = [var.get_labeling() for var in self.variables[frozenset(self.query_graph.nodes)]]
-               
+              
         for v in self.variables:
             for var in self.variables[v]:
                 labeling = var.get_labeling()
                 cost = var.get_local_cost()
                 self.variables_dict[tuple(labeling)] = cost
-        
-        # Choose all variable with estimation_size many different costs
-        #for label in self.variables_dict:
-        #    different_costs = []
             
-        
+        # Due to limiting number of variables in the previous step,
+        # there are some redundant variables that are not needed for the final solution
+        # ---------------------------------------------------------------
         labelings_for_full_join = [key for key in self.variables_dict.keys() if len(key) == len(self.query_graph.nodes) - 1]
         del_keys = []
         for e in self.variables_dict:
+            is_subset = False
             if len(e) == len(self.query_graph.nodes) - 1:
                 continue
-            is_subset = False
             for labeling in labelings_for_full_join:
                 if set(e).issubset(set(labeling)):
                     is_subset = True
@@ -264,9 +244,7 @@ class QJoin:
         
         for key in del_keys:
             del self.variables_dict[key]
-            
-        for e in self.variables_dict:
-            print(e, self.variables_dict[e])
+        # ---------------------------------------------------------------
         
         self.hubo = dimod.BinaryPolynomial(self.variables_dict, dimod.Vartype.BINARY)
         self.hubo_total_cost = dimod.BinaryPolynomial(self.variables_dict, dimod.Vartype.BINARY)
@@ -275,25 +253,9 @@ class QJoin:
         print("Number of variables: ", len(self.hubo_variables))
         print("Number of terms in HUBO: ", len(self.hubo))
         self.normalized_variable_dict, off = self.hubo.to_hubo()
-        
-
-
-    # At every level we perform exactly one join
-    def every_level_has_one_join(self):
-        scaler = self.scaler
-        for l in self.variables_by_levels:
-            vars = self.variables_by_levels[l]
-            if len(vars) > 0:
-                bqm = dimod.generators.combinations(vars, 1, strength = scaler)
-                for bvar in bqm.linear:
-                    self.safe_append(self.validity_constraints, (bvar,), bqm.linear[bvar], mode="int")
-                for bvar in bqm.quadratic:
-                    self.safe_append(self.validity_constraints, bvar, bqm.quadratic[bvar], mode="int")
-            else:
-                print("No variables at level ", l)
     
     
-    def every_level_appears_once(self):
+    def every_rank_appears_exactly_once(self):
         scaler = self.scaler
         for l in self.levels:
             vars = self.variables_by_levels[l]
@@ -301,16 +263,7 @@ class QJoin:
             for bvar in bqm.linear:
                 self.safe_append(self.validity_constraints, (bvar,), bqm.linear[bvar], mode="int")
             for bvar in bqm.quadratic:
-                self.safe_append(self.validity_constraints, bvar, bqm.quadratic[bvar], mode="int")  
-    
-    
-    def every_join_performed_at_most_once(self):
-        scaler = self.scaler
-        for join in self.variables_by_joins:
-            join_vars = self.variables_by_joins[join]
-            combs = combinations_with_variable('a' + str(join), join_vars, scaler=scaler)
-            for comb in combs:
-                self.safe_append(self.validity_constraints, comb, combs[comb], mode="int")
+                self.safe_append(self.validity_constraints, bvar, bqm.quadratic[bvar], mode="int")
 
 
     # Encode (1 - labelings for variables[frozenset({0, 1, 2, 3, 4})])^2
@@ -352,6 +305,15 @@ class QJoin:
             self.safe_append(self.validity_constraints, (bvar,), bqm.linear[bvar], mode="int")
         for bvar in bqm.quadratic:
             self.safe_append(self.validity_constraints, bvar, bqm.quadratic[bvar], mode="int")
+            
+    
+    def every_join_performed_at_most_once(self):
+        scaler = self.scaler
+        for join in self.variables_by_joins:
+            join_vars = self.variables_by_joins[join]
+            combs = combinations_with_variable('a' + str(join), join_vars, scaler=scaler)
+            for comb in combs:
+                self.safe_append(self.validity_constraints, comb, combs[comb], mode="int")
           
                 
     # level + 1 should be connected to level so that if (x, y, l) and (x', y', l + 1) 
@@ -425,7 +387,7 @@ class QJoin:
     
     
     def solve_with_dynamic_programming(self):
-        result = dynamic_programming(self.query_graph, self.relations, self.selectivities)
+        result = dynamic_programming(self.relations, self.selectivities)
         cost = basic_cost(result, self.relations, self.selectivities)
         self.samplesets["dynamic_programming"] = { "result": result, "cost": cost }
         return result, cost
@@ -497,10 +459,10 @@ class QJoin:
                     model.Params.LogToConsole = 0
                 model.Params.LogFile = "logs//" + self.name +  "_gurobi.log"
                 model.Params.OutputFlag = 1
-                #model.Params.MIPFocus = 0 # aims to find a single optimal solution
-                #model.Params.PoolSearchMode = 0 # No need for multiple solutions
+                model.Params.MIPFocus = 0 # aims to find a single optimal solution
+                model.Params.PoolSearchMode = 0 # No need for multiple solutions
                 #model.Params.PoolGap = 0.0 # Only provably optimal solutions are added to the pool
-                model.Params.TimeLimit = 1500
+                model.Params.TimeLimit = 300
                 model.Params.NumericFocus = 3
                 #model.Params.Threads = 8
                 #model.presolve() # Decreases quality of solutions
@@ -558,6 +520,18 @@ class QJoin:
         self.samplesets["greedy"] = { "result": result, "cost": cost }
         return result, cost
     
+    def solve_with_greedy_with_query_graph(self):
+        result = greedy_with_query_graph(self.query_graph, self.relations, self.selectivities)
+        cost = basic_cost(result, self.relations, self.selectivities)
+        self.samplesets["greedy_with_query_graph"] = { "result": result, "cost": cost }
+        return result, cost
+    
+    def solve_with_graph_aware_dynamic_programming(self):
+        result = graph_aware_dynamic_programming(self.query_graph, self.relations, self.selectivities)
+        cost = basic_cost(result, self.relations, self.selectivities)
+        self.samplesets["graph_aware_dynamic_programming"] = { "result": result, "cost": cost }
+        return result, cost
+    
     
     def get_number_of_hubo_variables(self):
         return len(self.full_hubo.variables)
@@ -573,3 +547,6 @@ class QJoin:
     
     def get_number_of_bqm_terms(self):
         return len(self.bqm.linear) + len(self.bqm.quadratic)
+    
+    def get_estimation_size(self):
+        return self.estimation_size

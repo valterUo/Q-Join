@@ -1,0 +1,150 @@
+{
+    "Graph with 9 nodes and 8 edges": {
+        "solution": [
+            {
+                "(0, 4, 2)": 1,
+                "(0, 8, 1)": 1,
+                "(0, 6, 0)": 1,
+                "(0, 2, 4)": 1,
+                "(0, 7, 3)": 1,
+                "(0, 5, 6)": 1,
+                "(0, 1, 5)": 1,
+                "(0, 3, 7)": 1
+            }
+        ],
+        "join": [
+            3,
+            [
+                5,
+                [
+                    1,
+                    [
+                        2,
+                        [
+                            7,
+                            [
+                                4,
+                                [
+                                    8,
+                                    [
+                                        0,
+                                        6
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ],
+        "cost": 60269694.87552521,
+        "energy": -16.964725917582555,
+        "estimation_size": 1,
+        "dynamic_programming_cost": 60269694.8755252,
+        "dynamic_programming_solution": [
+            3,
+            [
+                5,
+                [
+                    1,
+                    [
+                        2,
+                        [
+                            7,
+                            [
+                                [
+                                    8,
+                                    [
+                                        6,
+                                        0
+                                    ]
+                                ],
+                                4
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ],
+        "graph_aware_dynamic_programming_cost": 60269694.8755252,
+        "graph_aware_dynamic_programming_solution": [
+            3,
+            [
+                5,
+                [
+                    1,
+                    [
+                        2,
+                        [
+                            7,
+                            [
+                                [
+                                    8,
+                                    [
+                                        6,
+                                        0
+                                    ]
+                                ],
+                                4
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ],
+        "greedy_cost": 60269694.87552521,
+        "greedy_solution": [
+            3,
+            [
+                5,
+                [
+                    1,
+                    [
+                        2,
+                        [
+                            7,
+                            [
+                                4,
+                                [
+                                    8,
+                                    [
+                                        0,
+                                        6
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ],
+        "graph_aware_greedy_cost": 60269694.87552521,
+        "graph_aware_greedy_solution": [
+            3,
+            [
+                5,
+                [
+                    1,
+                    [
+                        2,
+                        [
+                            7,
+                            [
+                                4,
+                                [
+                                    8,
+                                    [
+                                        0,
+                                        6
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ],
+        "found_optimal": false,
+        "plans_are_equal": true
+    }
+}

@@ -1,0 +1,86 @@
+{
+    "Graph with 5 nodes and 4 edges": {
+        "solution": [
+            {
+                "(0, 2, 1)": 1,
+                "(0, 1, 0)": 1,
+                "(0, 4, 2)": 1,
+                "(0, 3, 3)": 1
+            }
+        ],
+        "join": [
+            3,
+            [
+                4,
+                [
+                    2,
+                    [
+                        0,
+                        1
+                    ]
+                ]
+            ]
+        ],
+        "cost": 24549704.749517817,
+        "energy": -299.3670203183249,
+        "estimation_size": 165,
+        "dynamic_programming_cost": 24549585.75146233,
+        "dynamic_programming_solution": [
+            3,
+            [
+                [
+                    2,
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                4
+            ]
+        ],
+        "graph_aware_dynamic_programming_cost": 24549697.506873664,
+        "graph_aware_dynamic_programming_solution": [
+            3,
+            [
+                [
+                    2,
+                    [
+                        1,
+                        0
+                    ]
+                ],
+                4
+            ]
+        ],
+        "greedy_cost": 24549697.50687367,
+        "greedy_solution": [
+            3,
+            [
+                4,
+                [
+                    2,
+                    [
+                        0,
+                        1
+                    ]
+                ]
+            ]
+        ],
+        "graph_aware_greedy_cost": 24549697.50687367,
+        "graph_aware_greedy_solution": [
+            3,
+            [
+                4,
+                [
+                    2,
+                    [
+                        0,
+                        1
+                    ]
+                ]
+            ]
+        ],
+        "found_optimal": 0,
+        "plans_are_equal": 28
+    }
+}

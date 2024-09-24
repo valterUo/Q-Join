@@ -1,0 +1,102 @@
+{
+    "Graph with 6 nodes and 5 edges": {
+        "solution": [
+            {
+                "(4, 5, 4)": 1,
+                "(2, 3, 1)": 1,
+                "(3, 4, 0)": 1,
+                "(0, 1, 3)": 1,
+                "(1, 2, 2)": 1
+            }
+        ],
+        "join": [
+            5,
+            [
+                0,
+                [
+                    1,
+                    [
+                        2,
+                        [
+                            3,
+                            4
+                        ]
+                    ]
+                ]
+            ]
+        ],
+        "cost": 851424506.3215582,
+        "time": 46.779873847961426,
+        "estimation_size": 200,
+        "optimal_cost": 847322046.1815575,
+        "optimal_solution": [
+            5,
+            [
+                0,
+                [
+                    1,
+                    [
+                        2,
+                        [
+                            4,
+                            3
+                        ]
+                    ]
+                ]
+            ]
+        ],
+        "graph_aware_dynamic_programming_cost": 851424506.321558,
+        "graph_aware_dynamic_programming_solution": [
+            5,
+            [
+                0,
+                [
+                    1,
+                    [
+                        2,
+                        [
+                            4,
+                            3
+                        ]
+                    ]
+                ]
+            ]
+        ],
+        "greedy_cost": 850252106.6760755,
+        "greedy_solution": [
+            5,
+            [
+                0,
+                [
+                    1,
+                    [
+                        2,
+                        [
+                            3,
+                            4
+                        ]
+                    ]
+                ]
+            ]
+        ],
+        "graph_aware_greedy_cost": 853282526.9353316,
+        "graph_aware_greedy_solution": [
+            5,
+            [
+                0,
+                [
+                    1,
+                    [
+                        2,
+                        [
+                            3,
+                            4
+                        ]
+                    ]
+                ]
+            ]
+        ],
+        "found_optimal": 12,
+        "plans_are_equal": 12
+    }
+}

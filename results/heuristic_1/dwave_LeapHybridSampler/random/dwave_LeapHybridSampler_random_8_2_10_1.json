@@ -1,0 +1,134 @@
+{
+    "Graph with 8 nodes and 14 edges": {
+        "solution": [
+            {
+                "(1, 2, 3)": 1,
+                "(4, 6, 0)": 1,
+                "(1, 6, 1)": 1,
+                "(1, 7, 2)": 1,
+                "(4, 5, 6)": 1,
+                "(3, 7, 4)": 1,
+                "(0, 3, 5)": 1
+            }
+        ],
+        "join": [
+            5,
+            [
+                0,
+                [
+                    3,
+                    [
+                        2,
+                        [
+                            7,
+                            [
+                                1,
+                                [
+                                    4,
+                                    6
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ],
+        "cost": 144666921.27885988,
+        "energy": -291.2760396685051,
+        "estimation_size": 20,
+        "dynamic_programming_cost": 144251259.401659,
+        "dynamic_programming_solution": [
+            5,
+            [
+                0,
+                [
+                    3,
+                    [
+                        2,
+                        [
+                            7,
+                            [
+                                1,
+                                [
+                                    4,
+                                    6
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ],
+        "graph_aware_dynamic_programming_cost": 144251259.401659,
+        "graph_aware_dynamic_programming_solution": [
+            5,
+            [
+                0,
+                [
+                    3,
+                    [
+                        2,
+                        [
+                            7,
+                            [
+                                1,
+                                [
+                                    4,
+                                    6
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ],
+        "greedy_cost": 144666921.27885988,
+        "greedy_solution": [
+            5,
+            [
+                0,
+                [
+                    3,
+                    [
+                        2,
+                        [
+                            7,
+                            [
+                                1,
+                                [
+                                    4,
+                                    6
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ],
+        "graph_aware_greedy_cost": 144666921.27885988,
+        "graph_aware_greedy_solution": [
+            5,
+            [
+                0,
+                [
+                    3,
+                    [
+                        2,
+                        [
+                            7,
+                            [
+                                1,
+                                [
+                                    4,
+                                    6
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ],
+        "found_optimal": 0,
+        "plans_are_equal": 10
+    }
+}

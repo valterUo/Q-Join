@@ -4,7 +4,7 @@ import time
 import numpy as np
 
 from classical_algorithms.weights_costs import basic_cost
-from utils import append_to_json, build_nested_list, compare_nested_lists, store_gurobi_results
+from utils import append_to_json, build_nested_list, compare_nested_lists, flatten, store_gurobi_results
 
 
 class Solver:
@@ -90,23 +90,33 @@ class Solver:
         
         tuples = list(poly_res.keys())
         join = build_nested_list(tuples)
-        poly_res = {str(k) : v for k, v in poly_res.items()}
-        classical_cost = basic_cost(join, self.qjoin.relations, self.qjoin.selectivities)
-        classic_solution = self.qjoin.solve_with_dynamic_programming()
+        poly_res = [{str(k) : v for k, v in poly_res.items()}]
         
+        classical_cost = basic_cost(join, self.qjoin.relations, self.qjoin.selectivities)
+        
+        estimation_size = self.qjoin.get_estimation_size()
+        dynamic_programming_solution = self.qjoin.solve_with_dynamic_programming()
+        graph_aware_dynamic_programming = self.qjoin.solve_with_graph_aware_dynamic_programming()
         greedy_solution = self.qjoin.solve_with_greedy()
+        graph_aware_greedy_solution = self.qjoin.solve_with_greedy_with_query_graph()
+        
         
         stored_result = {"solution": poly_res, 
                          "join" : join, 
                          "cost": classical_cost, 
-                         "energy": quantum_result.first.energy, 
+                         "energy": quantum_result.first.energy,
+                         "estimation_size": estimation_size,
                          "time": end_time - start_time, 
-                         "optimal_cost": classic_solution[1], 
-                         "optimal_solution": classic_solution[0],
-                         "found_optimal": bool(np.isclose(classical_cost, classic_solution[1], atol=1e-5)),
-                         "plans_are_equal": compare_nested_lists(join, classic_solution[0]),
+                         "dynamic_programming_cost": dynamic_programming_solution[1], 
+                         "dynamic_programming_solution": dynamic_programming_solution[0],
+                         "graph_aware_dynamic_programming_cost": graph_aware_dynamic_programming[1],
+                         "graph_aware_dynamic_programming_solution": graph_aware_dynamic_programming[0],
                          "greedy_cost": greedy_solution[1],
-                         "greedy_solution": greedy_solution[0]}
+                         "greedy_solution": greedy_solution[0],
+                         "graph_aware_greedy_cost": graph_aware_greedy_solution[1],
+                         "graph_aware_greedy_solution": graph_aware_greedy_solution[0],
+                         "found_optimal": bool(np.isclose(classical_cost, dynamic_programming_solution[1], atol=1e-5)),
+                         "plans_are_equal": compare_nested_lists(join, dynamic_programming_solution[0]),}
         
         append_to_json(self.experiment_name, str(self.query_graph), stored_result)
         
@@ -123,7 +133,7 @@ class Solver:
                 gurobi_res[eval(var)] = 1
         
         gurobi_res_pos = gurobi_res.copy()
-        gurobi_res_pos = {str(k): v for k, v in gurobi_res_pos.items() if v == 1}
+        gurobi_res_pos =[{str(k): v for k, v in gurobi_res_pos.items() if v == 1}]
         
         tuples = list(gurobi_res.keys())
         join = build_nested_list(tuples)
@@ -134,25 +144,39 @@ class Solver:
             
         quantum_cost = self.qjoin.evaluate_cost(gurobi_res)
         
-        found_optimal = None
-        if len(self.query_graph.nodes) < 13:
+        found_optimal = 0
+        if len(self.query_graph.nodes) < 17:
             classic_solution = self.qjoin.solve_with_dynamic_programming()
             found_optimal = bool(np.isclose(quantum_cost, classic_solution[1], atol=1e-5))
         else:
-            classic_solution = [None, None]
+            classic_solution = [0, 0]
             
+        greedy_solution_with_graph = self.qjoin.solve_with_greedy_with_query_graph()
+        estimation_size = self.qjoin.get_estimation_size()
+        
+        graph_aware_dynamic_programming = self.qjoin.solve_with_graph_aware_dynamic_programming()
+        
+        #if not np.isclose(classical_cost, graph_aware_dynamic_programming[1]):
+        #    print("ERROR")
+        #    return None
+        
         greedy_solution = self.qjoin.solve_with_greedy()
         
         stored_result = {"solution": gurobi_res_pos, 
                          "join" : join, 
                          "cost": classical_cost, 
-                         "time": end_time - start_time, 
+                         "time": end_time - start_time,
+                         "estimation_size": estimation_size,
                          "optimal_cost": classic_solution[1], 
                          "optimal_solution": classic_solution[0],
-                         "found_optimal": found_optimal,
-                         "plans_are_equal": compare_nested_lists(join, classic_solution[0]),
+                         "graph_aware_dynamic_programming_cost": graph_aware_dynamic_programming[1],
+                         "graph_aware_dynamic_programming_solution": graph_aware_dynamic_programming[0],
                          "greedy_cost": greedy_solution[1],
-                         "greedy_solution": greedy_solution[0]}
+                         "greedy_solution": greedy_solution[0],
+                         "graph_aware_greedy_cost": greedy_solution_with_graph[1],
+                         "graph_aware_greedy_solution": greedy_solution_with_graph[0],
+                         "found_optimal": found_optimal,
+                         "plans_are_equal": compare_nested_lists(join, classic_solution[0])}
         
         append_to_json(self.experiment_name, str(self.query_graph), stored_result)
     
@@ -261,7 +285,6 @@ class Solver:
                          "optimal_solution": classic_solution[0],
                          "found_optimal": bool(np.isclose(classical_cost, classic_solution[1], atol=1e-5)),
                          "plans_are_equal": compare_nested_lists(join, classic_solution[0]) }
-                         #"initial_point": initial_point }
         
         append_to_json(self.experiment_name, str(self.query_graph), stored_result)
         
@@ -275,26 +298,44 @@ class Solver:
         elif sampler == "Kerberos":
             quantum_result = self.qjoin.solve_with_KerberosSampler()
             
-        sim_res = {}
+        res = {}
         for var in quantum_result.first.sample:
             if quantum_result.first.sample[var] == 1 and "*" not in var and "a" not in var:
-                sim_res[var] = 1
-        tuples = list(sim_res.keys())
-        print(tuples)
+                res[var] = 1
+        
+        tuples = list(res.keys())
         join = build_nested_list(tuples)
         classical_cost = basic_cost(join, self.qjoin.relations, self.qjoin.selectivities)
-        classic_solution = self.qjoin.solve_with_dynamic_programming()
-        #quantum_cost = self.qjoin.evaluate_cost(sim_res)
         quantum_cost = 0
-        sim_res = {str(k) : v for k, v in sim_res.items()}
+        res = [{str(k) : v for k, v in res.items()}]
         
-        stored_result = {"solution": sim_res, 
+        estimation_size = self.qjoin.get_estimation_size()
+        dynamic_programming_solution = self.qjoin.solve_with_dynamic_programming()
+        graph_aware_dynamic_programming = self.qjoin.solve_with_graph_aware_dynamic_programming()
+        greedy_solution = self.qjoin.solve_with_greedy()
+        graph_aware_greedy_solution = self.qjoin.solve_with_greedy_with_query_graph()
+        
+        flattened_join = list(flatten(join))
+        greedy_sol = list(flatten(greedy_solution[0]))
+        if set(flattened_join) != set(greedy_sol):
+            print("ERROR")
+            return None
+        
+        stored_result = {"solution": res, 
                          "join" : join, 
-                         "cost": classical_cost, 
-                         "optimal_cost": classic_solution[1], 
-                         "optimal_solution": classic_solution[0],
-                         "found_optimal": bool(np.isclose(quantum_cost, classic_solution[1], atol=1e-5)),
-                         "plans_are_equal": compare_nested_lists(join, classic_solution[0])}
+                         "cost": classical_cost,
+                         "energy": quantum_result.first.energy,
+                         "estimation_size": estimation_size,
+                         "dynamic_programming_cost": dynamic_programming_solution[1], 
+                         "dynamic_programming_solution": dynamic_programming_solution[0],
+                         "graph_aware_dynamic_programming_cost": graph_aware_dynamic_programming[1],
+                         "graph_aware_dynamic_programming_solution": graph_aware_dynamic_programming[0],
+                         "greedy_cost": greedy_solution[1],
+                         "greedy_solution": greedy_solution[0],
+                         "graph_aware_greedy_cost": graph_aware_greedy_solution[1],
+                         "graph_aware_greedy_solution": graph_aware_greedy_solution[0],
+                         "found_optimal": bool(np.isclose(quantum_cost, dynamic_programming_solution[1], atol=1e-5)),
+                         "plans_are_equal": compare_nested_lists(join, dynamic_programming_solution[0])}
         
         append_to_json(self.experiment_name, str(self.query_graph), stored_result)
         
