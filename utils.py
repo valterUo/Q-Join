@@ -9,9 +9,9 @@ from classical_algorithms.weights_costs import basic_cost, join_tree_cardinality
 
 class Variable:
     
-    def __init__(self, relations, selectivities, new_subgraph, rel1, rel2, level, base_labeling):
+    def __init__(self, relations, selectivities, new_subgraph, rel1, rel2, rank, base_labeling):
         
-        self.level = level
+        self.rank = rank
         self.local_cost = 1
         self.new_subgraph = new_subgraph
         
@@ -22,7 +22,7 @@ class Variable:
 
         self.local_cost = join_tree_cardinality(join_tree, relations, selectivities)
         
-        self.labeling = base_labeling + [(rel1, rel2, level)]
+        self.labeling = base_labeling + [(rel1, rel2, rank)]
         self.rel1 = rel1
         self.rel2 = rel2
         
@@ -32,22 +32,22 @@ class Variable:
     def get_local_cost(self):
         return self.local_cost
     
-    def get_level(self):
-        return self.level
+    def get_rank(self):
+        return self.rank
     
     def __str__(self) -> str:
-        return f'Variable({self.rel1}, {self.rel2}, {self.level}) with labelings {self.labeling} and local cost {self.local_cost}'
+        return f'Variable({self.rel1}, {self.rel2}, {self.rank}) with labelings {self.labeling} and local cost {self.local_cost}'
 
 
 
 # Encodes, for example, the following constraint:
 # (x - a - b - c)^2 = a^2 + 2 a b + 2 a c - 2 a x + b^2 + 2 b c - 2 b x + c^2 - 2 c x + x^2
-def combinations_with_variable(x, vars, scaler = 1):
+def combinations_with_variable(x, vars, scaler = 1, coeff = 1):
     result = {}
-    result[(x,)] = scaler
+    result[(x,)] = (coeff**2)*scaler
     for v in vars:
         result[(v,)] = scaler
-        result[(x, v)] = -2 * scaler
+        result[(x, v)] = -2 * coeff * scaler
     
     for comb in combinations(vars, 2):
         result[comb] = 2 * scaler
@@ -55,34 +55,60 @@ def combinations_with_variable(x, vars, scaler = 1):
     return result
 
 # Encodes, for example, the following constraint:
-# (1 + 2*x_2 + ... + max_number_of_levels * x_n - sum over table variables)^2
+# (1 + 2*x_2 + ... + max_number_of_ranks * x_n - sum over table variables)^2
 # Uses also trick from Lucas how to encode integer variables
-def table_number_constraint(max_number_of_levels, tables, table_id, scaler = 1):
-    integer_vars = []
-    N = max_number_of_levels
-    M = int(np.floor(np.log2(N)))
-    result = {}
+def table_number_constraint(max_number_of_ranks, tables, table_id):
     
-    for i in range(1, M + 1):
-        if i == M:
-            integer_vars.append((f'table_{table_id}_{i}', (N + 1 - 2**M)))
-        integer_vars.append((f'table_{table_id}_{i}', 2**i))
+    result = {}
+    integer_vars = {}
+    for i in range(2, max_number_of_ranks + 1):
+        integer_vars[f'table_{table_id}_{i}'] = i**2
     
     for int_var in integer_vars:
-        result[(int_var[0],)] = scaler * (int_var[1]**2 + 2 * int_var[1])
+        result[(int_var,)] = integer_vars[int_var]**2
     
     for table in tables:
-        result[(table,)] = -scaler
+        result[(table,)] = -1
     
-    for x, y in combinations(integer_vars + tables, 2):
-        if x in integer_vars and y in integer_vars:
-            result[(x[0], y[0])] = 2 * scaler * x[1] * y[1]
-        elif x in integer_vars and y in tables:
-            result[(x[0], y)] = -2 * scaler * x[1]
-        elif x in tables and y in integer_vars:
-            result[(x, y[0])] = -2 * scaler * y[1]
-        else:
-            result[(x, y)] = 2 * scaler
+    for (table, integer_var) in zip(tables, list(integer_vars.keys())):
+        result[(table, integer_var)] = -2*integer_vars[integer_var]
+    
+    for comb in combinations(tables, 2):
+        result[comb] = 2
+        
+    for comb in combinations(list(integer_vars.keys()), 2):
+        result[comb] = 2 * integer_vars[comb[0]] * integer_vars[comb[1]]
+    
+    return result
+    
+    
+    if False:
+        print(tables)
+        integer_vars = []
+        N = max_number_of_ranks
+        M = int(np.floor(np.log2(N)))
+        result = {}
+        
+        for i in range(1, M + 1):
+            if i == M:
+                integer_vars.append((f'table_{table_id}_{i}', (N + 1 - 2**M)))
+            integer_vars.append((f'table_{table_id}_{i}', 2**i))
+        
+        for int_var in integer_vars:
+            result[(int_var[0],)] = scaler * (int_var[1]**2 + 2 * int_var[1])
+        
+        for table in tables:
+            result[(table,)] = -scaler
+        
+        for x, y in combinations(integer_vars + tables, 2):
+            if x in integer_vars and y in integer_vars:
+                result[(x[0], y[0])] = 2 * scaler * x[1] * y[1]
+            elif x in integer_vars and y in tables:
+                result[(x[0], y)] = -2 * scaler * x[1]
+            elif x in tables and y in integer_vars:
+                result[(x, y[0])] = -2 * scaler * y[1]
+            else:
+                result[(x, y)] = 2 * scaler
     
     return result
     
@@ -133,15 +159,15 @@ def get_connected_subgraphs_with_dfs(graph, node, n, approximate=False, excluded
 def build_nested_list(tuples):
     children_map = {}
 
-    for parent, current, level in tuples:
-        if level not in children_map:
-            children_map[level] = []
-        children_map[level].append((parent, current))
+    for parent, current, rank in tuples:
+        if rank not in children_map:
+            children_map[rank] = []
+        children_map[rank].append((parent, current))
 
-    levels = list(sorted(children_map.keys()))
+    ranks = list(sorted(children_map.keys()))
     nested_list = []
     added_nodes = set()
-    for i in levels:
+    for i in ranks:
         for parent, current in children_map[i]:
             if parent not in added_nodes and current not in added_nodes:
                 if nested_list == []:
@@ -211,7 +237,6 @@ def append_to_json(file, key, data):
             if k in data:
                 if isinstance(old_data[k], list):
                     pass
-                    #old_data[key].extend(data[key])
                 else:
                     old_data[k] = old_data[k] + data[k]
             else:
@@ -256,3 +281,26 @@ def flatten(container):
                 yield j
         else:
             yield i
+            
+import networkx as nx
+
+def is_star_graph(G):
+    degrees = dict(G.degree())
+    n = len(G.nodes())
+    if n < 3:
+        return False
+    center_count = sum(1 for degree in degrees.values() if degree == n - 1)
+    leaf_count = sum(1 for degree in degrees.values() if degree == 1)
+    return center_count == 1 and leaf_count == n - 1
+
+
+def is_chain_tree(G):
+    if not nx.is_tree(G):
+        raise ValueError("The graph is not a tree.")
+    for node in G.nodes():
+        degree = G.degree(node)
+        if degree > 2:
+            return False
+    return True
+
+

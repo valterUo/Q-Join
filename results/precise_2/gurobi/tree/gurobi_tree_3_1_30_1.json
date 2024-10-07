@@ -3,6 +3,7 @@
         "solution": [
             {
                 "(0, 1, 0)": 1,
+                "(0, 1, 1)": 1,
                 "(1, 2, 1)": 1
             }
         ],
@@ -13,18 +14,18 @@
                 1
             ]
         ],
-        "cost": 110928.2698522395,
-        "energy": -100.27338360048417,
-        "estimation_size": 200,
-        "dynamic_programming_cost": 110909.038809699,
-        "dynamic_programming_solution": [
+        "cost": 110265.11777422206,
+        "time": 0.22916936874389648,
+        "estimation_size": 19,
+        "optimal_cost": 110245.88673168157,
+        "optimal_solution": [
             2,
             [
                 1,
                 0
             ]
         ],
-        "graph_aware_dynamic_programming_cost": 110928.2698522395,
+        "graph_aware_dynamic_programming_cost": 110265.11777422206,
         "graph_aware_dynamic_programming_solution": [
             2,
             [
@@ -32,7 +33,7 @@
                 0
             ]
         ],
-        "greedy_cost": 110928.2698522395,
+        "greedy_cost": 110265.11777422206,
         "greedy_solution": [
             2,
             [
@@ -40,7 +41,7 @@
                 1
             ]
         ],
-        "graph_aware_greedy_cost": 110928.2698522395,
+        "graph_aware_greedy_cost": 110265.11777422206,
         "graph_aware_greedy_solution": [
             2,
             [
@@ -49,6 +50,6 @@
             ]
         ],
         "found_optimal": 0,
-        "plans_are_equal": 18
+        "plans_are_equal": 17
     }
 }

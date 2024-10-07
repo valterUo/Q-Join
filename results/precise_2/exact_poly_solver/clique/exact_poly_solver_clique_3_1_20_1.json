@@ -1,9 +1,9 @@
 {
-    "Graph with 3 nodes and 2 edges": {
+    "Graph with 3 nodes and 3 edges": {
         "solution": [
             {
-                "(0, 1, 0)": 1,
-                "(1, 2, 1)": 1
+                "(0, 2, 1)": 1,
+                "(0, 1, 0)": 1
             }
         ],
         "join": [
@@ -13,10 +13,11 @@
                 1
             ]
         ],
-        "cost": 110928.2698522395,
-        "energy": -100.27338360048417,
-        "estimation_size": 200,
-        "dynamic_programming_cost": 110909.038809699,
+        "cost": 49147.11104448107,
+        "energy": -240.33300415777884,
+        "estimation_size": 20,
+        "time": 0.020489931106567383,
+        "dynamic_programming_cost": 49147.11104448107,
         "dynamic_programming_solution": [
             2,
             [
@@ -24,7 +25,7 @@
                 0
             ]
         ],
-        "graph_aware_dynamic_programming_cost": 110928.2698522395,
+        "graph_aware_dynamic_programming_cost": 49147.11104448107,
         "graph_aware_dynamic_programming_solution": [
             2,
             [
@@ -32,7 +33,7 @@
                 0
             ]
         ],
-        "greedy_cost": 110928.2698522395,
+        "greedy_cost": 49147.11104448107,
         "greedy_solution": [
             2,
             [
@@ -40,7 +41,7 @@
                 1
             ]
         ],
-        "graph_aware_greedy_cost": 110928.2698522395,
+        "graph_aware_greedy_cost": 49147.11104448107,
         "graph_aware_greedy_solution": [
             2,
             [
@@ -48,7 +49,7 @@
                 1
             ]
         ],
-        "found_optimal": 0,
-        "plans_are_equal": 18
+        "found_optimal": 20,
+        "plans_are_equal": 20
     }
 }

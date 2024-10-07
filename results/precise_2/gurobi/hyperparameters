@@ -1,7 +1,0 @@
-graph = "clique"
-method_name = "precise_2"
-min_n_nodes = 3
-max_n_nodes = 6
-solver_name = "gurobi"
-hubo_to_bqm_strengths = [0, 0, 0, 2, 2, 2, 2, 2]
-scalers = [0, 0, 0, 2, 2, 2, 2, 2]

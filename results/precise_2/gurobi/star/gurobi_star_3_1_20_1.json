@@ -3,7 +3,8 @@
         "solution": [
             {
                 "(0, 1, 0)": 1,
-                "(1, 2, 1)": 1
+                "(0, 1, 1)": 1,
+                "(0, 2, 1)": 1
             }
         ],
         "join": [
@@ -13,18 +14,18 @@
                 1
             ]
         ],
-        "cost": 110928.2698522395,
-        "energy": -100.27338360048417,
-        "estimation_size": 200,
-        "dynamic_programming_cost": 110909.038809699,
-        "dynamic_programming_solution": [
+        "cost": 111226.97232703873,
+        "time": 0.2845275402069092,
+        "estimation_size": 20,
+        "optimal_cost": 110929.6050678858,
+        "optimal_solution": [
             2,
             [
                 1,
                 0
             ]
         ],
-        "graph_aware_dynamic_programming_cost": 110928.2698522395,
+        "graph_aware_dynamic_programming_cost": 111226.97232703873,
         "graph_aware_dynamic_programming_solution": [
             2,
             [
@@ -32,7 +33,7 @@
                 0
             ]
         ],
-        "greedy_cost": 110928.2698522395,
+        "greedy_cost": 111226.97232703873,
         "greedy_solution": [
             2,
             [
@@ -40,7 +41,7 @@
                 1
             ]
         ],
-        "graph_aware_greedy_cost": 110928.2698522395,
+        "graph_aware_greedy_cost": 111226.97232703873,
         "graph_aware_greedy_solution": [
             2,
             [

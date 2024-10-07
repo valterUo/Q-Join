@@ -3,6 +3,7 @@
         "solution": [
             {
                 "(0, 1, 0)": 1,
+                "(0, 1, 1)": 1,
                 "(1, 2, 1)": 1
             }
         ],
@@ -14,10 +15,10 @@
             ]
         ],
         "cost": 110928.2698522395,
-        "energy": -100.27338360048417,
-        "estimation_size": 200,
-        "dynamic_programming_cost": 110909.038809699,
-        "dynamic_programming_solution": [
+        "time": 0.21311259269714355,
+        "estimation_size": 20,
+        "optimal_cost": 110909.038809699,
+        "optimal_solution": [
             2,
             [
                 1,
