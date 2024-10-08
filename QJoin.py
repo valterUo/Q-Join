@@ -121,19 +121,13 @@ class QJoin:
     def respect_query_graph(self):
         scaler = self.scaler
         for rank in self.ranks:
-            #rank = self.max_number_of_ranks - 1
             for join1 in self.variables_by_joins:
                 for join2 in self.variables_by_joins:
                     if join1[0] not in join2 or join1[1] not in join2:
                         if join1[0] in join2 or join1[1] in join2:
                             var1 = ((join1[0], join1[1], rank), (join2[0], join2[1], rank))
                             self.safe_append(self.validity_constraints, var1, -scaler, mode="int")
-                        #else:
-                        #    var2 = ((join1[0], join1[1], rank), (join2[0], join2[1], rank))
-                        #    self.safe_append(self.validity_constraints, var2, scaler, mode="int")
-                    #else:
-                    #    var2 = ((join1[0], join1[1], rank), (join2[0], join2[1], rank))
-                    #    self.safe_append(self.validity_constraints, var2, scaler, mode="int")
+                            
                     
     def respect_query_graph2(self):
         scaler = self.scaler

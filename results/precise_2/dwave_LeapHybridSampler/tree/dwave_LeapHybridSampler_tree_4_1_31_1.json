@@ -1,0 +1,73 @@
+{
+    "Graph with 4 nodes and 3 edges": {
+        "solution": [
+            {
+                "(0, 3, 2)": 1,
+                "(1, 3, 0)": 1,
+                "(2, 3, 2)": 1,
+                "(1, 3, 1)": 1,
+                "(0, 3, 1)": 1,
+                "(1, 3, 2)": 1
+            }
+        ],
+        "join": [
+            2,
+            [
+                0,
+                [
+                    1,
+                    3
+                ]
+            ]
+        ],
+        "cost": 1894142.9491276257,
+        "energy": -13399.211593935335,
+        "estimation_size": 20,
+        "dynamic_programming_cost": 1893021.8315933459,
+        "dynamic_programming_solution": [
+            2,
+            [
+                3,
+                [
+                    1,
+                    0
+                ]
+            ]
+        ],
+        "graph_aware_dynamic_programming_cost": 1894142.9491276254,
+        "graph_aware_dynamic_programming_solution": [
+            2,
+            [
+                0,
+                [
+                    1,
+                    3
+                ]
+            ]
+        ],
+        "greedy_cost": 1894107.114212482,
+        "greedy_solution": [
+            2,
+            [
+                0,
+                [
+                    1,
+                    3
+                ]
+            ]
+        ],
+        "graph_aware_greedy_cost": 1895849.4546232426,
+        "graph_aware_greedy_solution": [
+            2,
+            [
+                0,
+                [
+                    1,
+                    3
+                ]
+            ]
+        ],
+        "found_optimal": 0,
+        "plans_are_equal": 15
+    }
+}

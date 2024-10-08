@@ -1,0 +1,93 @@
+{
+    "Graph with 5 nodes and 5 edges": {
+        "solution": [
+            {
+                "(3, 4, 1)": 1,
+                "(0, 4, 1)": 1,
+                "(2, 3, 0)": 1,
+                "(1, 2, 3)": 1,
+                "(0, 1, 2)": 1,
+                "(3, 4, 2)": 1,
+                "(2, 3, 3)": 1,
+                "(0, 4, 3)": 1,
+                "(3, 4, 3)": 1,
+                "(1, 2, 2)": 1,
+                "(0, 1, 3)": 1
+            }
+        ],
+        "join": [
+            0,
+            [
+                1,
+                [
+                    4,
+                    [
+                        2,
+                        3
+                    ]
+                ]
+            ]
+        ],
+        "cost": 8865964.637494676,
+        "energy": -136934.6011276272,
+        "estimation_size": 11,
+        "dynamic_programming_cost": 7772932.246302387,
+        "dynamic_programming_solution": [
+            3,
+            [
+                4,
+                [
+                    2,
+                    [
+                        1,
+                        0
+                    ]
+                ]
+            ]
+        ],
+        "graph_aware_dynamic_programming_cost": 7778602.12920296,
+        "graph_aware_dynamic_programming_solution": [
+            3,
+            [
+                4,
+                [
+                    2,
+                    [
+                        1,
+                        0
+                    ]
+                ]
+            ]
+        ],
+        "greedy_cost": 7772932.246302387,
+        "greedy_solution": [
+            3,
+            [
+                4,
+                [
+                    2,
+                    [
+                        0,
+                        1
+                    ]
+                ]
+            ]
+        ],
+        "graph_aware_greedy_cost": 7778602.12920296,
+        "graph_aware_greedy_solution": [
+            3,
+            [
+                4,
+                [
+                    2,
+                    [
+                        0,
+                        1
+                    ]
+                ]
+            ]
+        ],
+        "found_optimal": 0,
+        "plans_are_equal": 0
+    }
+}
