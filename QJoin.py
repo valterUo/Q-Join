@@ -60,6 +60,15 @@ class QJoin:
         elif method_name == "heuristic_1":
             self.construct_estimate_cost_function()
             self.group_variables()
+            
+            self.hubo_total_cost.normalize()
+            sample_like = {}
+            for var in self.hubo_variables:
+                sample_like[var] = 1
+            max_cost = self.hubo_total_cost.energy(sample_like)   
+                
+            self.scaler = max_cost
+            
             self.every_rank_appears_exactly_once()
             self.hubo_combinations()
             
@@ -269,6 +278,7 @@ class QJoin:
                                 index = second_terms.index(max(second_terms))
                                 min_keys[index] = (var, last_ranks_min)                   
             min_keys = [min_key[0] for min_key in min_keys if min_key[0] is not None]
+            #print("Min keys: ", min_keys)
             # ----------------------------------------------
             
             for edge in self.query_graph.edges(data=True):
@@ -292,17 +302,44 @@ class QJoin:
                                     self.variables[new_subgraph].append(vvv)
                                 else:
                                     self.variables[new_subgraph] = [vvv]
-              
+                                        
         for v in self.variables:
             for var in self.variables[v]:
                 labeling = var.get_labeling()
                 cost = var.get_local_cost()
                 self.variables_dict[tuple(labeling)] = cost
+        
+        if self.query_graph_name == "clique":
+            variables_by_length = {}
+            for l in range(1, len(self.query_graph.nodes)):
+                variables_by_length[l] = []
+                for var in self.variables_dict:
+                    if len(var) == l:
+                        variables_by_length[l].append((var, self.variables_dict[var]))
+            
+            new_variables_dict = {}
+            for l in variables_by_length:
+                if l == 1:
+                    min_elem = min(variables_by_length[l], key=lambda x: x[1])
+                    new_variables_dict[min_elem[0]] = min_elem[1]
+                else:
+                    prev_var = [key for key in new_variables_dict.keys() if len(key) == l - 1][0]
+                    # Find the min element so that prev_var is a subset of it
+                    min_elem = None
+                    for elem in variables_by_length[l]:
+                        if set(prev_var).issubset(set(elem[0])):
+                            if min_elem is None:
+                                min_elem = elem
+                            if elem[1] < min_elem[1]:
+                                min_elem = elem
+                    new_variables_dict[min_elem[0]] = min_elem[1]
+            self.variables_dict = new_variables_dict
             
         # Due to limiting number of variables in the previous step,
         # there are some redundant variables that are not needed for the final solution
         # ---------------------------------------------------------------
         labelings_for_full_join = [key for key in self.variables_dict.keys() if len(key) == len(self.query_graph.nodes) - 1]
+        #print(labelings_for_full_join)
         del_keys = []
         for e in self.variables_dict:
             is_subset = False
@@ -317,7 +354,7 @@ class QJoin:
         for key in del_keys:
             del self.variables_dict[key]
         # ---------------------------------------------------------------
-        
+        print("variables dict at this point", self.variables_dict)
         self.hubo = dimod.BinaryPolynomial(self.variables_dict, dimod.Vartype.BINARY)
         self.hubo_total_cost = dimod.BinaryPolynomial(self.variables_dict, dimod.Vartype.BINARY)
         self.hubo.normalize()
@@ -352,6 +389,7 @@ class QJoin:
             else:
                 self.validity_constraints[tuple(labeling)] = -scaler
         
+        print(labelings_for_full_join)
         print("Creating combinations...", len(labelings_for_full_join))
         for comb in combinations(labelings_for_full_join, 2):
             if comb[0] != comb[1]:
@@ -651,7 +689,7 @@ class QJoin:
                 model.Params.MIPFocus = 0 # aims to find a single optimal solution
                 #model.Params.PoolSearchMode = 0 # No need for multiple solutions
                 model.Params.PoolGap = 0.0 # Only provably optimal solutions are added to the pool
-                model.Params.TimeLimit = 240
+                model.Params.TimeLimit = 60
                 model.Params.NumericFocus = 3
                 #model.Params.Threads = 8
                 model.presolve() # Decreases quality of solutions

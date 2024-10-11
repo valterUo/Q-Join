@@ -53,7 +53,7 @@ class QueryGraphs:
     # Interval 3 - 5 for precise
     # Interval 3 - ? for approximate
     def cliques(self, n_nodes=10, number_of_graphs = 1):
-        np.random.seed(0)
+        np.random.seed(4)
         graphs = []
         for _ in range(number_of_graphs):
             query_graph = nx.complete_graph(n_nodes)

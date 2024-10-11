@@ -1,0 +1,86 @@
+{
+    "Graph with 5 nodes and 10 edges": {
+        "solution": [
+            {
+                "(0, 1, 1)": 1,
+                "(0, 3, 2)": 1,
+                "(1, 4, 0)": 1,
+                "(2, 3, 3)": 1
+            }
+        ],
+        "join": [
+            2,
+            [
+                3,
+                [
+                    0,
+                    [
+                        1,
+                        4
+                    ]
+                ]
+            ]
+        ],
+        "cost": 187844.32047778612,
+        "time": 1.7359092235565186,
+        "estimation_size": 16,
+        "optimal_cost": 187413.94625482778,
+        "optimal_solution": [
+            2,
+            [
+                3,
+                [
+                    0,
+                    [
+                        4,
+                        1
+                    ]
+                ]
+            ]
+        ],
+        "graph_aware_dynamic_programming_cost": 187413.94625482778,
+        "graph_aware_dynamic_programming_solution": [
+            2,
+            [
+                3,
+                [
+                    0,
+                    [
+                        4,
+                        1
+                    ]
+                ]
+            ]
+        ],
+        "greedy_cost": 187844.32047778612,
+        "greedy_solution": [
+            2,
+            [
+                3,
+                [
+                    0,
+                    [
+                        1,
+                        4
+                    ]
+                ]
+            ]
+        ],
+        "graph_aware_greedy_cost": 187844.32047778612,
+        "graph_aware_greedy_solution": [
+            2,
+            [
+                3,
+                [
+                    0,
+                    [
+                        1,
+                        4
+                    ]
+                ]
+            ]
+        ],
+        "found_optimal": 14,
+        "plans_are_equal": 14
+    }
+}

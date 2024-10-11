@@ -125,6 +125,7 @@ class Solver:
             tuples = new_tuples
             #print(tuples)
         
+        print("result", tuples)
         join = build_nested_list(tuples)
         poly_res = [{str(k) : v for k, v in poly_res.items()}]
         print(json.dumps(join, indent=4))
@@ -220,11 +221,12 @@ class Solver:
         quantum_cost = self.qjoin.evaluate_cost(gurobi_res)
         
         found_optimal = 0
-        if len(self.query_graph.nodes) < 17:
+        if len(self.query_graph.nodes) < 17 or self.qjoin.query_graph_name != "clique":
             classic_solution = self.qjoin.solve_with_dynamic_programming()
             found_optimal = bool(np.isclose(quantum_cost, classic_solution[1], atol=1e-5))
         else:
             classic_solution = [0, 0]
+            #graph_aware_dynamic_programming = [0, 0]
             
         greedy_solution_with_graph = self.qjoin.solve_with_greedy_with_query_graph()
         estimation_size = self.qjoin.get_estimation_size()
@@ -233,11 +235,13 @@ class Solver:
         
         if len(tuples) != len(self.query_graph.nodes) - 1:
             print("ERROR")
+            print(tuples)
             return None
         
         tables_in_result = set([t[0] for t in tuples]).union(set([t[1] for t in tuples]))
         if len(tables_in_result) != len(self.query_graph.nodes):
             print("ERROR")
+            print(tables_in_result)
             return None
         
         greedy_solution = self.qjoin.solve_with_greedy()
