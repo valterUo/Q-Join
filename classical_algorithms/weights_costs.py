@@ -18,7 +18,7 @@ def join_tree_cardinality(join_tree, relations, selectivities):
     if type(join_tree[1]) == list:
         flattened_relations_right = list(flatten(join_tree[1]))
     else:
-        flattened_relations_right = [join_tree[1]]    
+        flattened_relations_right = [join_tree[1]]
     
     for rel_l in flattened_relations_left:
         for rel_r in flattened_relations_right:
