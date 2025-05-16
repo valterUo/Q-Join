@@ -1,5 +1,3 @@
-from itertools import combinations
-
 from classical_algorithms.weights_costs import basic_cost
 
 
@@ -7,9 +5,6 @@ def greedy(query_graph, relations, selectivities):
     join_result = []
     tables = query_graph.nodes()
     min_cost = float('inf')
-    
-    #relations = {table: {"cardinality": table["cardinality"]} for table in tables}
-    #selectivities = {(table1, table2): {"selectivity": query_graph[table1][table2]["selectivity"]} for table1, table2 in query_graph.edges()}
     
     for table1, table2 in query_graph.edges():
         selectivity = query_graph[table1][table2]["selectivity"]
